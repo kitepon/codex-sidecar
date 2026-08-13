@@ -104,9 +104,7 @@ export async function captureSidecarRuntimeError(
   options: FactoryErrorStoreOptions = {},
 ): Promise<{ status: "recorded" | "disabled" | "ignored" | "failed"; fingerprint?: string }> {
   try {
-    const deadline = Date.now() + IO_TIMEOUT_MS;
     const fixedNow = options.now?.();
-    if (Date.now() >= deadline) throw new Error("factory error capture deadline expired");
     const observationId = options.observationId ?? randomBytes(32).toString("hex");
     const normalized: OwnedFactoryErrorStoreOptions = {
       ...options,
@@ -114,7 +112,7 @@ export async function captureSidecarRuntimeError(
       observationId,
       transientObservation: options.observationId === undefined,
     };
-    return await withAbsoluteDeadline(captureInBoundedWorkerQueue(errorCode, normalized, deadline), deadline);
+    return await captureInBoundedWorkerQueue(errorCode, normalized);
   } catch {
     emitStoreFailure();
     return { status: "failed" };
@@ -641,37 +639,19 @@ async function captureInIsolatedWorker(
   });
 }
 
-async function withAbsoluteDeadline<T>(promise: Promise<T>, deadline: number): Promise<T> {
-  const remaining = deadline - Date.now();
-  if (remaining <= 0) throw new Error("factory error capture deadline expired");
-  let timer: NodeJS.Timeout | undefined;
-  try {
-    return await Promise.race([
-      promise,
-      new Promise<never>((_, reject) => {
-        timer = setTimeout(() => reject(new Error("factory error capture deadline expired")), remaining);
-      }),
-    ]);
-  } finally {
-    if (timer) clearTimeout(timer);
-  }
-}
-
 async function captureInBoundedWorkerQueue(
   errorCode: string,
   options: OwnedFactoryErrorStoreOptions,
-  deadline: number,
 ): Promise<{ status: "recorded" | "disabled" | "ignored" | "failed"; fingerprint?: string }> {
   if (queuedCaptures >= MAX_CAPTURE_QUEUE) throw new Error("factory error capture queue is full");
   queuedCaptures += 1;
   const rawRun = captureTail.then(
-    () => captureInIsolatedWorker(errorCode, options, deadline),
-    () => captureInIsolatedWorker(errorCode, options, deadline),
+    () => captureInIsolatedWorker(errorCode, options, Date.now() + IO_TIMEOUT_MS),
+    () => captureInIsolatedWorker(errorCode, options, Date.now() + IO_TIMEOUT_MS),
   );
-  const run = withAbsoluteDeadline(rawRun, deadline);
-  captureTail = run.then(() => undefined, () => undefined);
+  captureTail = rawRun.then(() => undefined, () => undefined);
   try {
-    return await run;
+    return await rawRun;
   } finally {
     queuedCaptures -= 1;
   }

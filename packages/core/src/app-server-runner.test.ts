@@ -387,7 +387,9 @@ test("runReadOnlyAppServerRequest fails write-capable requests before App Server
   assert.equal(result.error?.code, "APP_SERVER_UNIMPLEMENTED");
 });
 
-test("owned read-only App Server calls use and release a durable isolated auth session", async (t) => {
+test("owned read-only App Server calls use and release a durable isolated auth session", {
+  skip: process.platform === "win32" ? "durable auth sessionはPOSIX runtime契約" : false,
+}, async (t) => {
   const root = await mkdtemp(join(tmpdir(), "codex-sidecar-runner-auth-"));
   t.after(() => rm(root, { recursive: true, force: true }));
   const home = join(root, "home"); const cache = join(root, "cache"); const logs = join(root, "logs");
@@ -416,7 +418,9 @@ test("owned read-only App Server calls use and release a durable isolated auth s
   await next.closeClean();
 });
 
-test("unconfirmed App Server close keeps the durable auth lease held", async (t) => {
+test("unconfirmed App Server close keeps the durable auth lease held", {
+  skip: process.platform === "win32" ? "durable auth sessionはPOSIX runtime契約" : false,
+}, async (t) => {
   const root = await mkdtemp(join(tmpdir(), "codex-sidecar-runner-close-")); t.after(() => rm(root, { recursive: true, force: true }));
   const home = join(root, "home"); const cache = join(root, "cache"); const logs = join(root, "logs");
   await mkdir(home, { mode: 0o700 }); await mkdir(cache, { mode: 0o700 }); await mkdir(logs, { mode: 0o700 }); await chmod(home, 0o700); await chmod(cache, 0o700);

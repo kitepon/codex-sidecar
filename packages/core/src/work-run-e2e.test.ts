@@ -441,6 +441,10 @@ test("cooperative cancel interrupts the owned App Server and returns a cancelled
 
   assert.equal(started.kind, "run_handle", JSON.stringify(started));
   await waitForRunning(fixture.repo, key);
+  await waitForFileContent(
+    join(runDirectoryFor(fixture.repo, started.runId), "worktree", "README.md"),
+    /sidecar fixture change/,
+  );
 
   const cancellation = await cancelWorkRun({ projectRoot: fixture.repo, idempotencyKey: key });
   assert.equal(cancellation.kind, "run_cancel_ack", JSON.stringify(cancellation));
@@ -658,6 +662,19 @@ async function waitForPath(path: string): Promise<void> {
     await sleep(25);
   }
   throw new Error(`path was not created: ${path}`);
+}
+
+async function waitForFileContent(path: string, expected: RegExp): Promise<void> {
+  const deadline = Date.now() + 10_000;
+  while (Date.now() < deadline) {
+    try {
+      if (expected.test(await readFile(path, "utf8"))) return;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    }
+    await sleep(25);
+  }
+  throw new Error(`file content did not become ready: ${path}`);
 }
 
 async function startCoordinator(fixture: Fixture): Promise<ChildProcess> {

@@ -622,7 +622,11 @@ async function runCli(home: string, cache: string, args: string[], env: NodeJS.P
   });
   if (stdoutReadDelayMs > 0) await new Promise((resolve) => setTimeout(resolve, stdoutReadDelayMs));
   child.stdout.on("data", (chunk: string) => { stdout += chunk; }); child.stderr.on("data", (chunk: string) => { stderr += chunk; });
-  const code = await completion;
+  const streamsEnded = Promise.all([
+    new Promise<void>((resolve) => child.stdout.once("end", resolve)),
+    new Promise<void>((resolve) => child.stderr.once("end", resolve)),
+  ]);
+  const [code] = await Promise.all([completion, streamsEnded]);
   return { code, stdout, stderr };
 }
 

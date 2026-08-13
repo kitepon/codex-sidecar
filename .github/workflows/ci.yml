@@ -2,33 +2,29 @@ name: CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 実行する工場環境
+        type: choice
+        default: all
+        options: [all, macos-native, linux-native, windows-native, wsl2]
+
+permissions:
+  contents: read
 
 jobs:
-  verify:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Install dependencies
-        run: corepack pnpm install --frozen-lockfile
-
-      - name: Typecheck
-        run: corepack pnpm typecheck
-
-      - name: Test
-        run: corepack pnpm test
-
-      - name: Build
-        run: corepack pnpm build
+  full:
+    uses: kitepon/dotagents/.github/workflows/factory-full-ci.yml@main
+    with:
+      environment: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'all' }}
+      full-command: >-
+        corepack pnpm install --frozen-lockfile &&
+        corepack pnpm lint &&
+        corepack pnpm typecheck &&
+        corepack pnpm test &&
+        corepack pnpm build &&
+        corepack pnpm test:release-gate

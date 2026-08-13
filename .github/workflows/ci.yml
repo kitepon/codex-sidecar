@@ -23,8 +23,8 @@ jobs:
       environment: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'all' }}
       full-command: >-
         corepack pnpm install --frozen-lockfile &&
-        corepack pnpm lint &&
         corepack pnpm typecheck &&
+        corepack pnpm lint &&
         corepack pnpm test &&
         corepack pnpm build &&
         corepack pnpm test:release-gate

@@ -217,7 +217,7 @@ test("factory-diagnostics flushes a pipe-capacity-sized not-ready response befor
   const bin = join(root.root, "bin");
   await mkdir(bin);
   const mcp = join(bin, "codex-sidecar-mcp");
-  const version = `0.3.7+${"a".repeat(65_000)}`;
+  const version = `0.3.7+${"a".repeat(65_400)}`;
   await writeFile(mcp, `#!/bin/sh
 read request
 printf '%s\\n' '{"jsonrpc":"2.0","id":1,"result":{"serverInfo":{"name":"codex-sidecar","version":"${version}"}}}'

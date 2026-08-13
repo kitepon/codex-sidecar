@@ -1,37 +1,13 @@
 #!/usr/bin/env node
 import { readFileSync } from "node:fs";
 import { cwd, exit } from "node:process";
-import { inspectNativeFactoryReadiness, nativeFactoryDiagnosticFailure } from "./diagnostics.js";
-import {
-  CONFIG_FILE,
-  SIDECAR_RUN_ERROR_CODES,
-  WorkAuthRecoveryStrategy,
-  WORKFLOWS,
-  buildEcosystemContextBlocks,
-  cancelWorkRun,
-  getWorkRunResult,
-  inspectWorkAuthRecovery,
-  inspectWorkRecovery,
-  buildSidecarRequest,
-  loadSidecarConfig,
-  modelPolicyInfo,
-  recoverWorkAuthSession,
-  recoverWorkRun,
-  runSidecarRequest,
-  startWorkRun,
-  inspectCurrentDurableAuthRecovery,
-  recoverSyncDurableAuthSession,
-  toSidecarError,
-  acknowledgeSidecarRuntimeErrors,
-  compactSidecarRuntimeErrors,
-  readSidecarRuntimeErrors,
-  reopenSidecarRuntimeError,
-  resolveSidecarRuntimeError,
-  type AuthRecoveryStrategy,
-  type ModelReasoningEffort,
-  type SidecarRunErrorCode,
-  type SidecarContextBlock,
-  type SidecarWorkflow,
+import type {
+  AuthRecoveryStrategy,
+  ModelReasoningEffort,
+  SidecarRunErrorCode,
+  SidecarContextBlock,
+  SidecarWorkflow,
+  WorkAuthRecoveryStrategy as WorkAuthRecoveryStrategyType,
 } from "codex-sidecar-core";
 
 interface CliOptions {
@@ -50,7 +26,7 @@ interface CliOptions {
   preserveWorktree: boolean;
   context: SidecarContextBlock[];
   sessionId?: string;
-  authRecoveryStrategy?: WorkAuthRecoveryStrategy;
+  authRecoveryStrategy?: WorkAuthRecoveryStrategyType;
   confirmNoRunningProcesses: boolean;
   idempotencyKey?: string;
   baseRef?: string;
@@ -81,6 +57,34 @@ if (process.argv.length === 3 && process.argv[2] === "--version") {
     await writeJsonAndSetExit({ status: "failed", error: error instanceof Error ? error.message : String(error) }, 1);
   }
 }
+
+const { inspectNativeFactoryReadiness, nativeFactoryDiagnosticFailure } = await import("./diagnostics.js");
+const {
+  CONFIG_FILE,
+  SIDECAR_RUN_ERROR_CODES,
+  WorkAuthRecoveryStrategy,
+  WORKFLOWS,
+  buildEcosystemContextBlocks,
+  cancelWorkRun,
+  getWorkRunResult,
+  inspectWorkAuthRecovery,
+  inspectWorkRecovery,
+  buildSidecarRequest,
+  loadSidecarConfig,
+  modelPolicyInfo,
+  recoverWorkAuthSession,
+  recoverWorkRun,
+  runSidecarRequest,
+  startWorkRun,
+  inspectCurrentDurableAuthRecovery,
+  recoverSyncDurableAuthSession,
+  toSidecarError,
+  acknowledgeSidecarRuntimeErrors,
+  compactSidecarRuntimeErrors,
+  readSidecarRuntimeErrors,
+  reopenSidecarRuntimeError,
+  resolveSidecarRuntimeError,
+} = await import("codex-sidecar-core");
 
 async function main(): Promise<void> {
   let parsed!: CliOptions;
@@ -151,7 +155,7 @@ try {
     if (!parsed.confirmNoRunningProcesses) throw new Error("--confirm-no-running-processes is required for work-auth-recover");
     await writeJsonAndSetExit(await recoverWorkAuthSession({
       ...lookup,
-      strategy: parsed.authRecoveryStrategy as WorkAuthRecoveryStrategy,
+      strategy: parsed.authRecoveryStrategy as WorkAuthRecoveryStrategyType,
       confirmNoRunningProcesses: true,
     }), 0); return;
   }
@@ -523,9 +527,9 @@ function parseModelReasoningEffort(value: string, option: string): ModelReasonin
   throw new Error(`${option} must be one of: low, medium, high, xhigh`);
 }
 
-function parseAuthRecoveryStrategy(value: string): WorkAuthRecoveryStrategy {
+function parseAuthRecoveryStrategy(value: string): WorkAuthRecoveryStrategyType {
   if ((Object.values(WorkAuthRecoveryStrategy) as string[]).includes(value)) {
-    return value as WorkAuthRecoveryStrategy;
+    return value as WorkAuthRecoveryStrategyType;
   }
   throw new Error(`--strategy must be one of: ${Object.values(WorkAuthRecoveryStrategy).join(", ")}`);
 }

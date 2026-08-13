@@ -124,9 +124,11 @@ test("AppServerClient.close escalates TERM to KILL and confirms the owned child 
     args: ["--input-type=module", "-e", `import {writeFileSync} from 'node:fs'; writeFileSync(${JSON.stringify(pidPath)},String(process.pid)); process.on('SIGTERM',()=>{}); setInterval(()=>{},1000)`],
     env: { ...process.env, CODEX_HOME: root },
   });
-  const pid = await waitForPid(pidPath); const identity = { pid, startIdentity: await processStartIdentity(pid) };
+  const pid = await waitForPid(pidPath);
+  const identity = process.platform === "win32" ? undefined : { pid, startIdentity: await processStartIdentity(pid) };
   await client.close();
-  assert.equal(await matchesProcessIdentity(identity), false);
+  if (identity) assert.equal(await matchesProcessIdentity(identity), false);
+  else assert.throws(() => process.kill(pid, 0), { code: "ESRCH" });
 });
 
 test("AppServerClient.close fails closed when an already-exited owner still has a stdio-holding descendant", async (t) => {

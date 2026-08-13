@@ -615,6 +615,10 @@ async function runCli(home: string, cache: string, args: string[], env: NodeJS.P
   });
   let stdout = ""; let stderr = "";
   child.stdout.setEncoding("utf8"); child.stderr.setEncoding("utf8");
+  const streamsEnded = Promise.all([
+    new Promise<void>((resolve) => child.stdout.once("end", resolve)),
+    new Promise<void>((resolve) => child.stderr.once("end", resolve)),
+  ]);
   const completion = new Promise<number | null>((resolve, reject) => {
     child.once("error", reject);
     child.stdout.once("error", reject);
@@ -622,10 +626,6 @@ async function runCli(home: string, cache: string, args: string[], env: NodeJS.P
   });
   if (stdoutReadDelayMs > 0) await new Promise((resolve) => setTimeout(resolve, stdoutReadDelayMs));
   child.stdout.on("data", (chunk: string) => { stdout += chunk; }); child.stderr.on("data", (chunk: string) => { stderr += chunk; });
-  const streamsEnded = Promise.all([
-    new Promise<void>((resolve) => child.stdout.once("end", resolve)),
-    new Promise<void>((resolve) => child.stderr.once("end", resolve)),
-  ]);
   const [code] = await Promise.all([completion, streamsEnded]);
   return { code, stdout, stderr };
 }

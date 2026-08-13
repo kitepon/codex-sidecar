@@ -12,8 +12,11 @@ async function waitForExit(childProcess: ReturnType<typeof child>) { if (childPr
 async function settle(): Promise<void> { await new Promise((resolve) => setTimeout(resolve, 50)); }
 
 test("owned group sends TERM then KILL to a TERM-ignoring child", { skip: process.platform === "win32" }, async (t) => {
-  const process = child("process.on('SIGTERM',()=>{}); setInterval(()=>{},1000)"); t.after(() => { try { process.kill("SIGKILL"); } catch {} });
-  const owned = await ownProcessGroup(process); await settle(); const result = await stopOwnedProcessGroup(owned, 500);
+  const directory = await mkdtemp(join(tmpdir(), "sidecar-term-ready-"));
+  const readyPath = join(directory, "ready.pid");
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const process = child(`import {writeFileSync} from 'node:fs'; process.on('SIGTERM',()=>{}); writeFileSync(${JSON.stringify(readyPath)},String(process.pid)); setInterval(()=>{},1000)`); t.after(() => { try { process.kill("SIGKILL"); } catch {} });
+  const owned = await ownProcessGroup(process); await waitForPid(readyPath); const result = await stopOwnedProcessGroup(owned, 500);
   assert.equal(result.termSent, true); assert.equal(result.killSent, true); assert.equal(result.exited, true); assert.equal(result.closed, true);
 });
 

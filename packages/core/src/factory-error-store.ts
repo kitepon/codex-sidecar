@@ -645,15 +645,33 @@ async function captureInBoundedWorkerQueue(
 ): Promise<{ status: "recorded" | "disabled" | "ignored" | "failed"; fingerprint?: string }> {
   if (queuedCaptures >= MAX_CAPTURE_QUEUE) throw new Error("factory error capture queue is full");
   queuedCaptures += 1;
+  const operationTimeoutMs = platform() === "win32" ? 5_000 : IO_TIMEOUT_MS;
+  const queueDeadline = Date.now() + (queuedCaptures * operationTimeoutMs);
   const rawRun = captureTail.then(
-    () => captureInIsolatedWorker(errorCode, options, Date.now() + IO_TIMEOUT_MS),
-    () => captureInIsolatedWorker(errorCode, options, Date.now() + IO_TIMEOUT_MS),
+    () => captureInIsolatedWorker(errorCode, options, Date.now() + operationTimeoutMs),
+    () => captureInIsolatedWorker(errorCode, options, Date.now() + operationTimeoutMs),
   );
   captureTail = rawRun.then(() => undefined, () => undefined);
   try {
-    return await rawRun;
+    return await withAbsoluteDeadline(rawRun, queueDeadline);
   } finally {
     queuedCaptures -= 1;
+  }
+}
+
+async function withAbsoluteDeadline<T>(promise: Promise<T>, deadline: number): Promise<T> {
+  const remaining = deadline - Date.now();
+  if (remaining <= 0) throw new Error("factory error capture deadline expired");
+  let timer: NodeJS.Timeout | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error("factory error capture deadline expired")), remaining);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
   }
 }
 

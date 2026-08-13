@@ -131,7 +131,9 @@ test("AppServerClient.close escalates TERM to KILL and confirms the owned child 
   else assert.throws(() => process.kill(pid, 0), { code: "ESRCH" });
 });
 
-test("AppServerClient.close fails closed when an already-exited owner still has a stdio-holding descendant", async (t) => {
+test("AppServerClient.close fails closed when an already-exited owner still has a stdio-holding descendant", {
+  skip: process.platform === "win32" ? "WindowsはPOSIX process groupを製品契約に持たない" : false,
+}, async (t) => {
   const root = await mkdtemp(join(tmpdir(), "app-server-close-descendant-")); t.after(() => rm(root, { recursive: true, force: true }));
   const pidPath = join(root, "descendant.pid"); let descendantPid: number | undefined;
   t.after(() => { if (descendantPid) { try { process.kill(descendantPid, "SIGKILL"); } catch {} } });

@@ -3,7 +3,7 @@ import { execFile } from "node:child_process";
 import { existsSync } from "node:fs";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, parse, resolve } from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 import {
@@ -17,10 +17,13 @@ import {
 } from "./index.js";
 
 const execFileAsync = promisify(execFile);
+const fixtureRoot = parse(process.cwd()).root;
+const projectRoot = resolve(fixtureRoot, "repo");
+const worktreePath = resolve(fixtureRoot, "tmp", "repo-worktree");
 
 const request: SidecarRequest = {
   workflow: "work",
-  projectRoot: "/repo",
+  projectRoot,
   prompt: "Change docs.",
   readonly: false,
   requireWorktree: true,
@@ -37,8 +40,8 @@ const request: SidecarRequest = {
 };
 
 const plan: WorktreePlan = {
-  projectRoot: "/repo",
-  worktreePath: "/tmp/repo-worktree",
+  projectRoot,
+  worktreePath,
   baseRef: "HEAD",
 };
 
@@ -64,12 +67,12 @@ test("runWorktreeAppServerRequest runs Codex inside isolated worktree and report
   });
 
   assert.equal(result.status, "ok");
-  assert.equal(appServerProjectRoot, "/tmp/repo-worktree");
-  assert.equal(appServerEventLogDir, "/repo/.codex-sidecar/logs/app-server");
+  assert.equal(appServerProjectRoot, worktreePath);
+  assert.equal(appServerEventLogDir, join(projectRoot, ".codex-sidecar", "logs", "app-server"));
   assert.equal(appServerModel, "gpt-5.5");
   assert.equal(appServerModelReasoningEffort, "high");
   assert.deepEqual(result.changedFiles, ["docs/plan.md"]);
-  assert.equal(result.worktreePath, "/tmp/repo-worktree");
+  assert.equal(result.worktreePath, worktreePath);
   assert.equal(result.worktreePreserved, true);
 });
 

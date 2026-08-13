@@ -493,7 +493,7 @@ test("Windows resolver rejects mixed npm shim variants and entrypoint reparse po
   assert.equal(await resolveMcpCommand({ platform: "win32", env: { PATH: "C:\\npm", PATHEXT: ".CMD" }, pathModule: win32, fs: fs as never }), undefined);
 });
 
-test("async work CLI uses project-root plus idempotency key for start, result, cancel, and inspection", async (t) => {
+test("async work CLI uses project-root plus idempotency key for start, result, cancel, and inspection", { skip: process.platform === "win32" }, async (t) => {
   const root = await workFixture(t);
   const start = await runCli(root.home, root.cache, [
     "work-start", "--project-root", root.repo, "--idempotency-key", key, "--dry-run",
@@ -548,7 +548,7 @@ test("async work CLI maps durable lookup errors to a non-zero exit", async (t) =
   assert.equal(payload.error.code, "RUN_NOT_FOUND");
 });
 
-test("work recovery confirmation and all four work auth strategies use the shared parser", async (t) => {
+test("work recovery confirmation and all four work auth strategies use the shared parser", { skip: process.platform === "win32" }, async (t) => {
   const root = await workFixture(t);
   const unconfirmed = await runCli(root.home, root.cache, [
     "work-recover", "--project-root", root.repo, "--idempotency-key", key, "--action", "quarantine",
@@ -598,7 +598,7 @@ async function workFixture(t: test.TestContext): Promise<{ root: string; home: s
 async function runCli(home: string, cache: string, args: string[], env: NodeJS.ProcessEnv = {}, stdoutReadDelayMs = 0): Promise<{ code: number | null; stdout: string; stderr: string }> {
   const entrypoint = fileURLToPath(new URL("./index.js", import.meta.url));
   const child = spawn(process.execPath, [entrypoint, ...args], {
-    env: { ...process.env, ...env, HOME: home, XDG_CONFIG_HOME: join(home, "config"), CODEX_HOME: home, XDG_CACHE_HOME: cache },
+    env: { ...process.env, ...env, HOME: home, LOCALAPPDATA: join(home, "local"), XDG_CONFIG_HOME: join(home, "config"), CODEX_HOME: home, XDG_CACHE_HOME: cache },
     stdio: ["ignore", "pipe", "pipe"],
   });
   let stdout = ""; let stderr = "";

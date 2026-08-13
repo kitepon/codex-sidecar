@@ -3,8 +3,9 @@ import { execFile, spawn } from "node:child_process";
 import { EventEmitter } from "node:events";
 import { chmod, lstat, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join, win32 } from "node:path";
+import { delimiter, join, win32 } from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { mcpPackageVersion } from "./diagnostics.js";
 import { resolveMcpCommand, resolveMcpCommandInHelper } from "./windows-command-resolver.js";
@@ -101,7 +102,8 @@ test("diagnostics preserves the normalized request compatibility contract", asyn
 test("diagnostics flushes a pipe-capacity-sized prompt with exit 0", async (t) => {
   const root = await workFixture(t);
   const prompt = "x".repeat(100_000);
-  const result = await runCli(root.home, root.cache, ["diagnostics", "--project", root.repo, prompt]);
+  await writeFile(join(root.repo, ".codex-sidecar.yml"), `project: cli-test\npresets:\n  large:\n    workflow: review\n    prompt: ${prompt}\n`);
+  const result = await runCli(root.home, root.cache, ["diagnostics", "--project", root.repo, "--preset", "large"]);
   assert.equal(result.code, 0, result.stdout);
   const payload = JSON.parse(result.stdout) as { status: string; normalizedRequest: { prompt?: string } };
   assert.equal(payload.status, "ok");
@@ -113,12 +115,7 @@ test("factory-diagnostics flushes complete ready JSON through a pipe without exp
   const root = await workFixture(t);
   const bin = join(root.root, "bin");
   await mkdir(bin);
-  const mcp = join(bin, "codex-sidecar-mcp");
-  await writeFile(mcp, `#!/bin/sh
-read request
-printf '%s\\n' '{"jsonrpc":"2.0","id":1,"result":{"serverInfo":{"name":"codex-sidecar","version":"0.3.8"}}}'
-`);
-  await chmod(mcp, 0o755);
+  await writeFakeMcp(bin, "0.3.8");
   const context = join(root.repo, "context.json");
   await writeFile(join(root.repo, ".codex-sidecar.yml"), [
     "project: cli-test",
@@ -135,7 +132,7 @@ printf '%s\\n' '{"jsonrpc":"2.0","id":1,"result":{"serverInfo":{"name":"codex-si
   const result = await runCli(root.home, root.cache, [
     "factory-diagnostics", "--project", root.repo, "--preset", "review", "--context-file", context,
   ], {
-    PATH: `${bin}:${process.env.PATH}`,
+    PATH: `${bin}${delimiter}${process.env.PATH}`,
     XDG_STATE_HOME: join(root.home, "state"),
     FACTORY_REPORTER_CONFIG: join(root.home, "missing-factory-reporter.json"),
   });
@@ -216,16 +213,12 @@ test("factory-diagnostics flushes a pipe-capacity-sized not-ready response befor
   const root = await workFixture(t);
   const bin = join(root.root, "bin");
   await mkdir(bin);
-  const mcp = join(bin, "codex-sidecar-mcp");
-  const version = `0.3.7+${"a".repeat(65_442)}`;
-  await writeFile(mcp, `#!/bin/sh
-read request
-printf '%s\\n' '{"jsonrpc":"2.0","id":1,"result":{"serverInfo":{"name":"codex-sidecar","version":"${version}"}}}'
-`);
-  await chmod(mcp, 0o755);
+  // MCP応答自体は64KiB上限内、診断全体はpipe容量を超える境界に置く。
+  const version = `0.3.7+${"a".repeat(65_350)}`;
+  await writeFakeMcp(bin, version);
 
   const result = await runCli(root.home, root.cache, ["factory-diagnostics", "--project", root.repo], {
-    PATH: `${bin}:${process.env.PATH}`,
+    PATH: `${bin}${delimiter}${process.env.PATH}`,
     XDG_STATE_HOME: join(root.home, "state"),
     FACTORY_REPORTER_CONFIG: join(root.home, "missing-factory-reporter.json"),
   }, 100);
@@ -243,16 +236,11 @@ test("factory-diagnostics handles EPIPE without rewriting JSON or reporting an u
   const root = await workFixture(t);
   const bin = join(root.root, "bin");
   await mkdir(bin);
-  const mcp = join(bin, "codex-sidecar-mcp");
   const version = `0.3.7+${"a".repeat(65_000)}`;
-  await writeFile(mcp, `#!/bin/sh
-read request
-printf '%s\\n' '{"jsonrpc":"2.0","id":1,"result":{"serverInfo":{"name":"codex-sidecar","version":"${version}"}}}'
-`);
-  await chmod(mcp, 0o755);
+  await writeFakeMcp(bin, version);
 
   const result = await runCliWithBrokenPipe(root.home, root.cache, ["factory-diagnostics", "--project", root.repo], {
-    PATH: `${bin}:${process.env.PATH}`,
+    PATH: `${bin}${delimiter}${process.env.PATH}`,
     XDG_STATE_HOME: join(root.home, "state"),
     FACTORY_REPORTER_CONFIG: join(root.home, "missing-factory-reporter.json"),
   });
@@ -608,7 +596,7 @@ async function workFixture(t: test.TestContext): Promise<{ root: string; home: s
 }
 
 async function runCli(home: string, cache: string, args: string[], env: NodeJS.ProcessEnv = {}, stdoutReadDelayMs = 0): Promise<{ code: number | null; stdout: string; stderr: string }> {
-  const entrypoint = new URL("./index.js", import.meta.url).pathname;
+  const entrypoint = fileURLToPath(new URL("./index.js", import.meta.url));
   const child = spawn(process.execPath, [entrypoint, ...args], {
     env: { ...process.env, ...env, HOME: home, XDG_CONFIG_HOME: join(home, "config"), CODEX_HOME: home, XDG_CACHE_HOME: cache },
     stdio: ["ignore", "pipe", "pipe"],
@@ -638,7 +626,7 @@ function assertNoUnexpectedStderr(stderr: string): void {
 }
 
 async function runCliWithBrokenPipe(home: string, cache: string, args: string[], env: NodeJS.ProcessEnv = {}): Promise<{ code: number | null; stdout: string; stderr: string }> {
-  const entrypoint = new URL("./index.js", import.meta.url).pathname;
+  const entrypoint = fileURLToPath(new URL("./index.js", import.meta.url));
   const child = spawn(process.execPath, [entrypoint, ...args], {
     env: { ...process.env, ...env, HOME: home, XDG_CONFIG_HOME: join(home, "config"), CODEX_HOME: home, XDG_CACHE_HOME: cache },
     stdio: ["ignore", "pipe", "pipe"],
@@ -649,4 +637,23 @@ async function runCliWithBrokenPipe(home: string, cache: string, args: string[],
   child.stderr.on("data", (chunk: string) => { stderr += chunk; });
   const code = await new Promise<number | null>((resolve, reject) => { child.once("error", reject); child.stdout.once("error", reject); child.once("close", resolve); });
   return { code, stdout, stderr };
+}
+
+async function writeFakeMcp(bin: string, version: string): Promise<void> {
+  const response = JSON.stringify({ jsonrpc: "2.0", id: 1, result: { serverInfo: { name: "codex-sidecar", version } } });
+  if (process.platform !== "win32") {
+    const command = join(bin, "codex-sidecar-mcp");
+    await writeFile(command, `#!/usr/bin/env node\nprocess.stdin.once("data", () => process.stdout.write(${JSON.stringify(`${response}\n`)}));\n`);
+    await chmod(command, 0o755);
+    return;
+  }
+
+  const entrypoint = join(bin, "node_modules", "fake-mcp", "dist", "server.mjs");
+  await mkdir(join(bin, "node_modules", "fake-mcp", "dist"), { recursive: true });
+  await writeFile(entrypoint, `process.stdin.once("data", () => process.stdout.write(${JSON.stringify(`${response}\n`)}));\n`);
+  await writeFile(join(bin, "codex-sidecar-mcp.cmd"), [
+    "@ECHO off", "GOTO start", ":find_dp0", "SET dp0=%~dp0", "EXIT /b", ":start", "SETLOCAL", "CALL :find_dp0", "",
+    "IF EXIST \"%dp0%\\node.exe\" (", "  SET \"_prog=%dp0%\\node.exe\"", ") ELSE (", "  SET \"_prog=node\"", "  SET PATHEXT=%PATHEXT:;.JS;=;%", ")", "",
+    "endLocal & goto #_undefined_# 2>NUL || title %COMSPEC% & \"%_prog%\"  \"%dp0%\\node_modules\\fake-mcp\\dist\\server.mjs\" %*", "",
+  ].join("\r\n"));
 }

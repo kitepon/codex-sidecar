@@ -115,7 +115,8 @@ test("factory-diagnostics flushes complete ready JSON through a pipe without exp
   const root = await workFixture(t);
   const bin = join(root.root, "bin");
   await mkdir(bin);
-  await writeFakeMcp(bin, "0.3.8");
+  const manifest = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8")) as { version: string };
+  await writeFakeMcp(bin, manifest.version);
   const context = join(root.repo, "context.json");
   await writeFile(join(root.repo, ".codex-sidecar.yml"), [
     "project: cli-test",
@@ -160,9 +161,9 @@ test("factory-diagnostics flushes complete ready JSON through a pipe without exp
     packageVersions: {
       status: "ready",
       packages: {
-        cli: "0.3.8",
-        core: "0.3.8",
-        mcp: "0.3.8",
+        cli: manifest.version,
+        core: manifest.version,
+        mcp: manifest.version,
       },
     },
     resultSchema: { status: "ready" },

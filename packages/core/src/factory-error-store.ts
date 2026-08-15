@@ -12,6 +12,8 @@ const DIR_MODE = 0o700;
 const FILE_MODE = 0o600;
 const DEFAULT_RETENTION_MS = 30 * 24 * 60 * 60 * 1_000;
 const IO_TIMEOUT_MS = 2_000;
+const WINDOWS_ACL_CHILD_TIMEOUT_MS = 3_000;
+const WINDOWS_CAPTURE_TIMEOUT_MS = 10_000;
 const MAX_OBSERVATIONS = 1_024;
 const MAX_STORE_BYTES = 1024 * 1024;
 const MAX_PRODUCT_VERSION_LENGTH = 128;
@@ -439,9 +441,16 @@ async function ensurePrivateDirectory(path: string): Promise<void> {
   await mkdir(path, { recursive: true, mode: DIR_MODE });
   const info = await lstat(path);
   if (!info.isDirectory() || info.isSymbolicLink()) throw new Error("unsafe store directory");
-  if (platform() !== "win32") await chmod(path, DIR_MODE);
-  else await applyAndVerifyWindowsAcl(path, true);
-  await assertPrivateDirectory(path);
+  if (platform() !== "win32") {
+    await chmod(path, DIR_MODE);
+    await assertPrivateDirectory(path);
+    return;
+  }
+  try {
+    await verifyWindowsAcl(path, true);
+  } catch {
+    await applyAndVerifyWindowsAcl(path, true);
+  }
 }
 
 async function assertPrivateDirectory(path: string): Promise<void> {
@@ -480,18 +489,23 @@ async function atomicWrite(path: string, value: FactoryErrorStore): Promise<void
 }
 
 async function withLock<T>(path: string, operation: () => Promise<T>): Promise<T> {
+  let existed = true;
   try {
     const info = await lstat(path);
     await assertPrivateFile(path, info);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    existed = false;
   }
   const database = new DatabaseSync(path);
   let active = false;
   try {
-    if (platform() === "win32") await applyAndVerifyWindowsAcl(path, false);
-    else await chmod(path, FILE_MODE);
-    await assertPrivateFile(path);
+    if (platform() === "win32") {
+      if (!existed) await applyAndVerifyWindowsAcl(path, false);
+    } else {
+      await chmod(path, FILE_MODE);
+      await assertPrivateFile(path);
+    }
     database.exec("PRAGMA journal_mode=DELETE; PRAGMA synchronous=FULL; PRAGMA busy_timeout=750; BEGIN IMMEDIATE");
     active = true;
     const result = await operation();
@@ -645,7 +659,7 @@ async function captureInBoundedWorkerQueue(
 ): Promise<{ status: "recorded" | "disabled" | "ignored" | "failed"; fingerprint?: string }> {
   if (queuedCaptures >= MAX_CAPTURE_QUEUE) throw new Error("factory error capture queue is full");
   queuedCaptures += 1;
-  const operationTimeoutMs = platform() === "win32" ? 5_000 : IO_TIMEOUT_MS;
+  const operationTimeoutMs = platform() === "win32" ? WINDOWS_CAPTURE_TIMEOUT_MS : IO_TIMEOUT_MS;
   const queueDeadline = Date.now() + (queuedCaptures * operationTimeoutMs);
   const rawRun = captureTail.then(
     () => captureInIsolatedWorker(errorCode, options, Date.now() + operationTimeoutMs),
@@ -712,8 +726,16 @@ async function verifyWindowsAcl(path: string, directory: boolean): Promise<void>
 async function runWindowsAclScript(path: string, directory: boolean, apply: boolean): Promise<void> {
   const script = apply ? WINDOWS_ACL_APPLY_SCRIPT : WINDOWS_ACL_VERIFY_SCRIPT;
   await runBoundedChild("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", script], false, {
-    ...process.env, FACTORY_ACL_PATH: path, FACTORY_ACL_DIRECTORY: directory ? "1" : "0",
+    ...windowsPowerShellEnvironment(), FACTORY_ACL_PATH: path, FACTORY_ACL_DIRECTORY: directory ? "1" : "0",
   });
+}
+
+function windowsPowerShellEnvironment(): NodeJS.ProcessEnv {
+  const env = { ...process.env };
+  for (const key of Object.keys(env)) {
+    if (key.toLowerCase() === "psmodulepath") delete env[key];
+  }
+  return env;
 }
 
 async function runBoundedChild(command: string, args: string[], capture: boolean, env = process.env): Promise<string> {
@@ -722,12 +744,12 @@ async function runBoundedChild(command: string, args: string[], capture: boolean
     let stdout = "";
     child.stdout?.setEncoding("utf8");
     child.stdout?.on("data", (chunk) => { stdout += chunk; if (stdout.length > 512) child.kill(); });
-    const timer = setTimeout(() => child.kill(), Math.floor(IO_TIMEOUT_MS / 2));
+    const timer = setTimeout(() => child.kill(), WINDOWS_ACL_CHILD_TIMEOUT_MS);
     child.once("error", (error) => { clearTimeout(timer); reject(error); });
     child.once("close", (code, signal) => {
       clearTimeout(timer);
       if (code === 0 && !signal && stdout.length <= 512) resolve(stdout.trim());
-      else reject(new Error("bounded child process failed"));
+      else reject(new Error(`bounded child process failed (code=${code ?? "null"}, signal=${signal ?? "none"})`));
     });
   });
 }

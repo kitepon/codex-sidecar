@@ -1,19 +1,19 @@
 {
   "name": "codex-sidecar-core",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "private": false,
   "license": "MIT",
   "author": {
     "name": "Quo / クオ at kitepon.dev",
     "url": "https://kitepon.dev/"
   },
-  "homepage": "https://github.com/kitepon-rgb/codex-sidecar#readme",
+  "homepage": "https://github.com/kitepon/codex-sidecar#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kitepon-rgb/codex-sidecar.git"
+    "url": "git+https://github.com/kitepon/codex-sidecar.git"
   },
   "bugs": {
-    "url": "https://github.com/kitepon-rgb/codex-sidecar/issues"
+    "url": "https://github.com/kitepon/codex-sidecar/issues"
   },
   "type": "module",
   "main": "dist/index.js",

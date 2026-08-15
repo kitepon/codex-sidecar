@@ -133,6 +133,18 @@ test("private modes, atomic replacement, and bounded diagnostics", { skip: proce
   });
 });
 
+test("Windows owner-only ACL store remains readable within the bounded capture deadline", { skip: process.platform !== "win32" }, async () => {
+  const options = await fixture();
+  assert.equal((await captureSidecarRuntimeError("APP_SERVER_TIMEOUT", options)).status, "recorded");
+  assert.deepEqual(await inspectSidecarRuntimeErrorStore(options), {
+    schemaVersion: "2",
+    collection: "enabled",
+    store: "ready",
+    pending: 1,
+  });
+  assert.equal((await readSidecarRuntimeErrors(options)).records.length, 1);
+});
+
 test("parallel captures retain every occurrence", async () => {
   const options = await fixture();
   await Promise.all(Array.from({ length: 12 }, () => captureSidecarRuntimeError("APP_SERVER_TIMEOUT", options)));

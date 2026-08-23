@@ -1,4 +1,5 @@
 import { constants } from "node:fs";
+import { isWin32 } from "./platform.js";
 import { link, lstat, mkdir, open, readdir, readFile, realpath, rm, stat } from "node:fs/promises";
 import { createHash, randomBytes } from "node:crypto";
 import { basename, isAbsolute, join, resolve } from "node:path";
@@ -448,4 +449,4 @@ function date(value: unknown): boolean { return typeof value === "string" && Num
 async function authHashEvidence(path: string): Promise<string> { try { return digest(await readFile(path, "utf8")); } catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return "absent"; throw uncertain("cannot read auth hash evidence", error); } }
 function coded(code: string, message: string): Error { return Object.assign(new Error(`${code}: ${message}`), { code }); }
 function uncertain(message: string, cause: unknown): Error { return coded("RUN_AUTH_UNCERTAIN", `${message}: ${cause instanceof Error ? cause.message : String(cause)}`); }
-function unsupported(): void { if (process.platform === "win32") throw coded("RUN_UNSUPPORTED_PLATFORM", "auth leases require POSIX hard links"); }
+function unsupported(): void { if (isWin32()) throw coded("RUN_UNSUPPORTED_PLATFORM", "auth leases require POSIX hard links"); }

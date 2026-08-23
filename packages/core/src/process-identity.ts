@@ -1,4 +1,5 @@
 import { execFile } from "node:child_process";
+import { isWin32 } from "./platform.js";
 import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
@@ -6,7 +7,7 @@ const execFileAsync = promisify(execFile);
 export interface ProcessIdentity { pid: number; startIdentity: string; }
 
 export async function currentProcessIdentity(): Promise<ProcessIdentity> {
-  if (process.platform === "win32") throw Object.assign(new Error("RUN_UNSUPPORTED_PLATFORM: launch requires POSIX"), { code: "RUN_UNSUPPORTED_PLATFORM" });
+  if (isWin32()) throw Object.assign(new Error("RUN_UNSUPPORTED_PLATFORM: launch requires POSIX"), { code: "RUN_UNSUPPORTED_PLATFORM" });
   return { pid: process.pid, startIdentity: await processStartIdentity(process.pid) };
 }
 

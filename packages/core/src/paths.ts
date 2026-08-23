@@ -13,8 +13,10 @@ export interface PathAccess {
   matchedPattern?: string;
 }
 
+const toPosixSlashes = (value: string): string => value.replaceAll("\\", "/");
+
 export function normalizeProjectPath(input: string): string {
-  const normalized = input.replaceAll("\\", "/");
+  const normalized = toPosixSlashes(input);
 
   if (normalized.trim().length === 0) {
     throw new Error("path must not be empty");
@@ -106,7 +108,7 @@ function matchesPattern(path: string, pattern: string): boolean {
 }
 
 function normalizePattern(pattern: string): string {
-  const normalized = pattern.replaceAll("\\", "/").replace(/^\.\/+/, "");
+  const normalized = toPosixSlashes(pattern).replace(/^\.\/+/, "");
 
   if (normalized.trim().length === 0) {
     throw new Error("path policy patterns must not be empty");

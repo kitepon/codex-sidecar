@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [0.3.10] — 2026-08-24
+
+### Changed
+- 挙動不変のOS層集約（harness用語統一campaignの分離規約）: POSIX専用契約のwin32ゲート5箇所
+  （auth-lease / process-group / process-identity / run-transition / work-run-service）を
+  新設`packages/core/src/platform.ts`の`isWin32()`predicateへ一本化した。エラーのcode・型・
+  messageは従来どおり各所有moduleが保つ。`paths.ts`のバックスラッシュ正規化2箇所も
+  ローカルヘルパへ統合。公開API・診断schemaは不変。
+
 ## [0.3.8] — 2026-07-19
 
 ### Fixed

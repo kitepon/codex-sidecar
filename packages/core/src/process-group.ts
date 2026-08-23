@@ -1,4 +1,5 @@
 import { execFile } from "node:child_process";
+import { isWin32 } from "./platform.js";
 import type { ChildProcess } from "node:child_process";
 import { promisify } from "node:util";
 import { matchesProcessIdentity, processStartIdentity, type ProcessIdentity } from "./process-identity.js";
@@ -82,5 +83,5 @@ function processGroupAlive(processGroupId: number): boolean {
   try { process.kill(-processGroupId, 0); return true; }
   catch (error) { if ((error as NodeJS.ErrnoException).code === "ESRCH") return false; if ((error as NodeJS.ErrnoException).code === "EPERM") return true; throw error; }
 }
-function requirePosix(): void { if (process.platform === "win32") throw coded("RUN_UNSUPPORTED_PLATFORM", "process groups require POSIX"); }
+function requirePosix(): void { if (isWin32()) throw coded("RUN_UNSUPPORTED_PLATFORM", "process groups require POSIX"); }
 function coded(code: string, message: string): Error { return Object.assign(new Error(`${code}: ${message}`), { code }); }

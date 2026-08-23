@@ -1,4 +1,5 @@
 import { currentProcessIdentity } from "./process-identity.js";
+import { isWin32 } from "./platform.js";
 import { captureDurableSidecarRuntimeError } from "./factory-error-store.js";
 import { buildSidecarRequest } from "./requests.js";
 import { dryRunResult } from "./results.js";
@@ -37,7 +38,7 @@ export async function startWorkRun(
   options: WorkRunStartOptions = {},
 ): Promise<SidecarRunStartResult> {
   try {
-    if (process.platform === "win32") {
+    if (isWin32()) {
       return operationError(Object.assign(new Error("async work workers require POSIX process groups"), { code: "RUN_UNSUPPORTED_PLATFORM" }));
     }
     const { projectRoot, idempotencyKey, baseRef, ...rawInput } = input;

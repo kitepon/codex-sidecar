@@ -2,7 +2,14 @@
 
 ## [Unreleased]
 
-## [0.3.10] — 2026-08-24
+## [0.3.11] — 2026-08-24
+
+### Fixed
+- 0.3.10はnpm publish直叩きにより`workspace:`依存が書き換わらないまま公開され、
+  global installが`EUNSUPPORTEDPROTOCOL`で失敗する欠陥版。workspace依存の版を
+  0.3.11へ同期し、pnpm publish（workspace protocol書き換えあり）で出し直した。
+
+## [0.3.10] — 2026-08-24（欠陥版・導入不能）
 
 ### Changed
 - 挙動不変のOS層集約（harness用語統一campaignの分離規約）: POSIX専用契約のwin32ゲート5箇所

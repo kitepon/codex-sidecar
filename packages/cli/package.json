@@ -1,6 +1,6 @@
 {
   "name": "codex-sidecar-cli",
-  "version": "0.3.10",
+  "version": "0.3.11",
   "private": false,
   "license": "MIT",
   "author": {
@@ -27,7 +27,7 @@
     "prepublishOnly": "node ../../scripts/verify-release-commit.mjs"
   },
   "dependencies": {
-    "codex-sidecar-core": "workspace:0.3.9"
+    "codex-sidecar-core": "workspace:0.3.11"
   },
   "devDependencies": {
     "typescript": "^5.8.3"

@@ -5,6 +5,8 @@
 ## [0.3.12] — 2026-08-30
 
 ### Fixed
+- Accept the native Linux workstation `linux` factory profile for the
+  product-owned opt-in runtime error store without changing its fail-closed schema.
 - Declare Node.js 22.13.0 as the real minimum in the root and all three public
   packages because `node:sqlite` is imported unconditionally without a flag.
 - Synchronize the lockfile with the workspace package versions so a clean

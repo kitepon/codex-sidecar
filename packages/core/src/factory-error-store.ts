@@ -551,7 +551,7 @@ function isFactoryReporterConfig(value: unknown): value is {
   if (!isRecord(value) || exactKeys(value, ["schema_version", "host", "collection", "reporting"]) === false || value.schema_version !== "1.0") return false;
   if (!isRecord(value.host) || !exactKeys(value.host, ["id", "profile"]) ||
       typeof value.host.id !== "string" || !/^[a-z0-9][a-z0-9._-]{0,63}$/.test(value.host.id) ||
-      !["server", "mac", "wsl", "windows-native"].includes(String(value.host.profile))) return false;
+      !["server", "mac", "linux", "wsl", "windows-native"].includes(String(value.host.profile))) return false;
   if (!isRecord(value.collection) || !exactKeys(value.collection, ["enabled"]) || typeof value.collection.enabled !== "boolean") return false;
   if (!isRecord(value.reporting) || !exactKeys(value.reporting, ["enabled", "endpoint", "credential_file"], true) || typeof value.reporting.enabled !== "boolean") return false;
   if (value.reporting.endpoint !== undefined) {

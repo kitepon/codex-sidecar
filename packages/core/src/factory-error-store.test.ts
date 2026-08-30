@@ -15,7 +15,7 @@ import {
   resolveSidecarRuntimeError,
 } from "./factory-error-store.js";
 
-async function fixture(enabled: boolean | "malformed" = true) {
+async function fixture(enabled: boolean | "malformed" = true, profile = "mac") {
   const root = await mkdtemp(join(tmpdir(), "sidecar-factory-errors-"));
   const configPath = join(root, "config.json");
   const storePath = join(root, "state", "errors.json");
@@ -23,12 +23,18 @@ async function fixture(enabled: boolean | "malformed" = true) {
     ? "{broken"
     : JSON.stringify({
       schema_version: "1.0",
-      host: { id: "test-host", profile: "mac" },
+      host: { id: "test-host", profile },
       collection: { enabled },
       reporting: { enabled: false },
     }), { mode: 0o600 });
   return { root, configPath, storePath, productVersion: "1.2.3" };
 }
+
+test("native Linux workstation profile enables the opt-in runtime error store", async () => {
+  const options = await fixture(true, "linux");
+  assert.equal((await captureSidecarRuntimeError("PROTOCOL_ERROR", options)).status, "recorded");
+  assert.equal((await inspectSidecarRuntimeErrorStore(options)).collection, "enabled");
+});
 
 test("collection is fail-closed for missing, malformed, and explicit false config", async () => {
   for (const enabled of [false, "malformed"] as const) {

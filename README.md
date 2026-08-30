@@ -6,10 +6,10 @@
 
 [![npm version](https://img.shields.io/npm/v/codex-sidecar-cli.svg?color=cb3837&logo=npm&label=codex-sidecar-cli)](https://www.npmjs.com/package/codex-sidecar-cli)
 [![npm version](https://img.shields.io/npm/v/codex-sidecar-mcp.svg?color=cb3837&logo=npm&label=codex-sidecar-mcp)](https://www.npmjs.com/package/codex-sidecar-mcp)
-[![CI](https://github.com/kitepon-rgb/codex-sidecar/actions/workflows/ci.yml/badge.svg)](https://github.com/kitepon-rgb/codex-sidecar/actions/workflows/ci.yml)
+[![CI](https://github.com/kitepon/codex-sidecar/actions/workflows/ci.yml/badge.svg)](https://github.com/kitepon/codex-sidecar/actions/workflows/ci.yml)
 [![license](https://img.shields.io/npm/l/codex-sidecar-cli.svg?color=blue)](LICENSE)
 [![node](https://img.shields.io/node/v/codex-sidecar-cli.svg?color=339933&logo=node.js&logoColor=white)](https://nodejs.org)
-[![GitHub release](https://img.shields.io/github/v/release/kitepon-rgb/codex-sidecar?color=24292e&logo=github)](https://github.com/kitepon-rgb/codex-sidecar/releases)
+[![GitHub release](https://img.shields.io/github/v/release/kitepon/codex-sidecar?color=24292e&logo=github)](https://github.com/kitepon/codex-sidecar/releases)
 
 **English** · [日本語](README.ja.md)
 
@@ -18,10 +18,14 @@
 
 Built and maintained by [Quo](https://x.com/QLyun35332) at [kitepon.dev](https://kitepon.dev/en).
 
-**Ownership boundary:** this repository owns isolated Codex execution.
-Cross-product installation and the integration contract are handled by
-[dotagents](https://github.com/kitepon-rgb/dotagents), the internal development
-toolchain behind kitepon.dev's products.
+Requires Node.js 22.13.0 or newer. The core loads the built-in `node:sqlite`
+module without an experimental flag, so older Node releases are unsupported.
+
+**Ownership boundary:** this repository owns standalone installation,
+configuration, state/schema migration, diagnostics, recovery, updates, releases,
+and isolated Codex execution. [dotagents](https://github.com/kitepon/dotagents)
+consumes the public contract for cross-product wiring and compatibility; it
+does not control this product's internal operation.
 
 [Usage](docs/USAGE.md) · [Architecture](docs/ARCHITECTURE.md) · [Protocol](docs/PROTOCOL.md)
 
@@ -102,6 +106,14 @@ inspect the diff before applying anything.
 | `auditor` | `codex_auditor` | Return a primary tool-use auditor judgment | No | `pass`, `missingTools` |
 | `generate` | `codex_generate` | Generate arbitrary structured JSON for a freeform task | No | `generated` (raw JSON object/array) |
 | `work` | `codex_work` | Implement a small scoped change | Isolated worktree only | `changedFiles`, `tests`, `worktreePath` |
+
+Management commands are separate from workflows: `diagnostics` resolves local
+configuration, `factory-diagnostics` reports bounded native readiness,
+`factory-errors` snapshots or updates the product-owned runtime error store,
+`auth-status` / `auth-recover` handle explicit auth recovery, and
+`work-start` / `work-result` / `work-cancel` / `work-recover` /
+`work-auth-recover` control durable work. See [the usage guide](docs/USAGE.md)
+for their complete options and safety constraints.
 
 Every workflow returns one `SidecarResult` JSON object. Downstream tools should
 consume the structured fields instead of scraping prose. `status` is `ok`,
@@ -246,7 +258,7 @@ MCP server and bind it to a chosen LAN IP only:
 
 ```bash
 # On the host that will run the sidecar
-git clone https://github.com/kitepon-rgb/codex-sidecar.git
+git clone https://github.com/kitepon/codex-sidecar.git
 cd codex-sidecar
 docker compose up -d --build
 ```
@@ -297,16 +309,16 @@ full HTTP transport reference, env vars, and operational commands.
 ## Ecosystem Fit
 
 `codex-sidecar` was built for an environment where Claude Code is the primary
-agent and Codex is a controlled sidecar. It is designed to compose with nearby
-tools without requiring them:
+agent and Codex is a controlled sidecar. It composes with current neighboring
+products without requiring them:
 
-- [Relay](https://github.com/kitepon-rgb/Relay) stores and retrieves cross-device Claude conversation context.
-- [Throughline](https://github.com/kitepon-rgb/Throughline) compresses Claude Code context and carries explicit handoffs.
-- [Caveat](https://github.com/kitepon-rgb/Caveat) stores long-term trap memory and repo-specific gotchas.
-- [SmartClaude](https://github.com/kitepon-rgb/SmartClaude) measures and optimizes token/context cost.
-- Lattice sensor provides local symbol graph context when a repository is indexed.
-- [image-generator](https://github.com/kitepon-rgb/image-generator) and [IP-MCP](https://github.com/kitepon-rgb/IP-MCP) provide MCP/OAuth/deployment patterns and
-  source-boundary lessons.
+- [Throughline](https://github.com/kitepon/Throughline) carries explicit handoffs.
+- [Caveat](https://github.com/kitepon/Caveat) supplies trap and repository context.
+- [Lattice](https://github.com/kitepon/Lattice) can provide repository-local symbol context through its sensor.
+
+Legacy context-kind names (`relay_entry`, `smartclaude_cost_hint`, and
+`codegraph_context`) remain accepted for wire compatibility. They do not create
+runtime dependencies on retired products.
 
 ## Repository Layout
 
@@ -315,7 +327,6 @@ codex-sidecar/
 ├─ rag/
 │  └─ INDEX.md
 ├─ docs/
-│  ├─ 00_OVERVIEW.md
 │  ├─ README.md
 │  ├─ adr/
 │  ├─ TODO.md
@@ -352,8 +363,11 @@ The current spine is functional:
   cancellation, quarantine, and explicit auth recovery
 - ecosystem context adapters and fixture snapshots
 - local Lattice sensor index support for this repository
+- product-owned runtime error storage with explicit snapshot/ack/resolve/reopen/compact operations
+- native factory readiness and runtime-error diagnostics
 
-The current release is ready for npm-based CLI and MCP installation. The MCP
+The current release is ready for npm-based CLI and MCP installation. Version
+numbers are owned by the package manifests and the npm badges above. The MCP
 stdio server is verified against npm-style symlinked `bin` startup, which is the
 normal path for Claude Code and other MCP clients that launch
 `codex-sidecar-mcp` from PATH. Caveat adoption is implemented through
@@ -370,13 +384,11 @@ corepack pnpm build
 ## Related Docs
 
 - [AGENTS.md](AGENTS.md): working instructions for Codex and future agents.
-- [docs/00_OVERVIEW.md](docs/00_OVERVIEW.md): canonical docs entrypoint.
-- [docs/README.md](docs/README.md): docs index and archive map.
+- [docs/README.md](docs/README.md): canonical docs entrypoint, ownership boundary, and archive policy.
 - [docs/USAGE.md](docs/USAGE.md): CLI, MCP handler, worktree, raw log, and structured result examples.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): package boundaries, layering, safety model, and result contract.
 - [docs/PROTOCOL.md](docs/PROTOCOL.md): Codex App Server protocol boundary and stable sidecar contracts.
-- [docs/TODO.md](docs/TODO.md): durable task list and linked GitHub issues.
-- [docs/archive/CODEX_MODEL_POLICY_TODO.md](docs/archive/CODEX_MODEL_POLICY_TODO.md): archived completed Codex model policy plan.
+- [docs/TODO.md](docs/TODO.md): reproduced, unresolved product defects.
 
 ## License
 

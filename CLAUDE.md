@@ -35,13 +35,15 @@ Test runner is `node --test` against **compiled** `dist/*.test.js`, not source. 
 Smoke a read-only App Server turn against this repo (after `corepack pnpm build`):
 
 ```bash
-node packages/cli/dist/index.js diagnostics --project /Users/kite/Developer/codex-sidecar --preset review
-node packages/cli/dist/index.js explore --project /Users/kite/Developer/codex-sidecar 'Reply exactly: OK'
+node packages/cli/dist/index.js diagnostics --project "$PWD" --preset review
+node packages/cli/dist/index.js explore --project "$PWD" 'Reply exactly: OK'
 ```
 
 ## Local Claude Settings
 
-Generate `.claude/settings.json` locally with the dotagents `fewer-permission-prompts` skill for this repository. Keep the generated allowlist terminal-local; it is intentionally ignored and must not be committed.
+No dotagents checkout or host-global setting is required to build or operate this
+repository. Optional host-local `.claude/settings.json` files remain ignored and
+must not be committed.
 
 ## Architecture
 
@@ -61,7 +63,7 @@ Dependency direction is enforced:
 
 - CLI → core, MCP → core. **Never** core → CLI/MCP.
 - App Server wire-format details (event names, message shapes) must not leak past `packages/core/src/app-server-*`.
-- Ecosystem context (Relay / Throughline / Caveat / SmartClaude / CodeGraph) enters core as **plain JSON context blocks**, not direct imports. The `context.ts` adapter is the boundary.
+- Ecosystem context enters core as **plain JSON context blocks**, not direct imports. Throughline, Caveat, and Lattice are the current neighboring products. Legacy `relay_entry`, `smartclaude_cost_hint`, and `codegraph_context` kind names remain wire-compatible; they are not runtime product dependencies. The `context.ts` adapter is the boundary.
 
 `packages/core/src/index.ts` re-exports the entire public surface. When adding a module, add it there.
 
@@ -141,8 +143,8 @@ App Server runs write one JSONL per turn under `<projectRoot>/.codex-sidecar/log
 ## Key docs
 
 - [AGENTS.md](AGENTS.md): engineering rules, ecosystem context, project purpose
-- [docs/00_OVERVIEW.md](docs/00_OVERVIEW.md): canonical docs entrypoint
+- [docs/README.md](docs/README.md): canonical docs entrypoint, ownership boundary, and lifecycle
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): layering, package boundaries, safety model
 - [docs/PROTOCOL.md](docs/PROTOCOL.md): App Server protocol notes and stable sidecar contracts
 - [docs/USAGE.md](docs/USAGE.md): CLI / MCP examples, worktree behavior, structured result shapes
-- [docs/TODO.md](docs/TODO.md): durable task list
+- [docs/TODO.md](docs/TODO.md): reproduced, unresolved product defects

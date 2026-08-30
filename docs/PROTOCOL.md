@@ -207,6 +207,13 @@ when the canonical dotagents factory reporter config contains the JSON boolean
 `collection.enabled: true`. The core never reads reporting credentials and
 never sends these records over the network.
 
+That config is an optional cross-product reporting input, not a product control
+plane. If it is absent, collection is disabled while standalone sidecar
+configuration, execution, diagnostics, `factory-errors` inspection/recovery,
+and schema migration continue to work. This repository owns the store schema,
+state transitions, diagnostics, and recovery commands; dotagents only opts its
+external factory-reporting integration into collection.
+
 The capture boundary accepts only a closed set of existing Sidecar error codes.
 Each code maps to a fixed component, severity, and message template before it
 reaches storage. Raw exceptions, stderr/stdout, stacks, prompts, requests,
@@ -419,5 +426,5 @@ The protocol adapter should fail explicitly.
 - [../AGENTS.md](../AGENTS.md): working instructions for Codex and future agents.
 - [README.md](README.md): docs index and archive map.
 - [ARCHITECTURE.md](ARCHITECTURE.md): package boundaries, layering, safety model, and result contract.
-- [TODO.md](TODO.md): durable task list and linked GitHub issues.
+- [TODO.md](TODO.md): reproduced, unresolved product defects.
 - [archive/CODEX_MODEL_POLICY_TODO.md](archive/CODEX_MODEL_POLICY_TODO.md): archived completed Codex model policy plan.

@@ -1,6 +1,6 @@
 {
   "name": "codex-sidecar-core",
-  "version": "0.3.11",
+  "version": "0.3.12",
   "private": false,
   "license": "MIT",
   "author": {
@@ -37,6 +37,9 @@
   },
   "devDependencies": {
     "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=22.13.0"
   },
   "publishConfig": {
     "access": "public"

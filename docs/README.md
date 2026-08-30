@@ -1,14 +1,25 @@
-# Docs
+# Documentation map
 
-This directory keeps the current operating docs for `codex-sidecar`.
+This is the single canonical index for `codex-sidecar` documentation. The
+repository owns every contract needed to install, configure, operate,
+diagnose, recover, update, and release the product on its own. `dotagents` may
+consume those public contracts for factory integration, but it does not own or
+control the product's internal operation.
+
+`codex-sidecar` is a pnpm monorepo that runs Codex as a controlled sidecar for
+reviews, exploration, risk checks, structured generation, and scoped work in
+isolated git worktrees. Package versions are owned by the root and package
+manifests; this map does not duplicate their mutable value.
 
 ## Current Docs
 
-- [00_OVERVIEW.md](00_OVERVIEW.md): canonical overview and doc map for the current project.
+- [../README.md](../README.md): public overview, standalone installation, supported commands, current status, and development entrypoints.
+- [../README.ja.md](../README.ja.md): Japanese public overview and standalone operating guide.
+- [../AGENTS.md](../AGENTS.md): product-owned engineering and documentation rules.
 - [USAGE.md](USAGE.md): CLI/MCP usage, durable async recovery controls, GPT-5.6 settings, release procedure, and structured result examples.
 - [ARCHITECTURE.md](ARCHITECTURE.md): package boundaries, layering, safety model, isolated configuration, and result contract.
 - [PROTOCOL.md](PROTOCOL.md): Codex App Server protocol boundary, schema-partial behavior, and stable sidecar contracts.
-- [TODO.md](TODO.md): durable task list and linked GitHub issues.
+- [TODO.md](TODO.md): reproduced, unresolved product defects only.
 
 ## Decisions
 
@@ -18,14 +29,18 @@ Architecture decision records and acceptance evidence are indexed at
 ## Archive
 
 Historical plans and external handoff briefs live under [archive/](archive/).
-Archived docs are useful context, but current behavior should be checked against
-the docs above and the implementation before making changes.
+Archived material explains past decisions but is never a source of current
+behavior. ADRs and acceptance evidence remain in their dedicated directories
+because they are immutable records rather than operating instructions.
 
-- [archive/LONG_RUNNING_WORK_RESILIENCE_PLAN.md](archive/LONG_RUNNING_WORK_RESILIENCE_PLAN.md): completed durable detached execution and result recovery plan for long-running `codex_work` calls.
-- [archive/CODEX_MODEL_POLICY_TODO.md](archive/CODEX_MODEL_POLICY_TODO.md): completed explicit Codex model policy plan and Caveat rollout record.
-- [archive/RELEASE_0_3_3_PLAN.md](archive/RELEASE_0_3_3_PLAN.md): completed 0.3.3 publication and Docker verification record.
-- [archive/STRUCTURED_OUTPUT_TOLERANCE_PLAN.md](archive/STRUCTURED_OUTPUT_TOLERANCE_PLAN.md): completed schema-drift tolerance and partial-result plan.
-- [archive/CLI_VERSION_PLAN.md](archive/CLI_VERSION_PLAN.md): completed CLI/MCP version contract and 0.3.4 release record.
-- [archive/RELEASE_0_3_5_PLAN.md](archive/RELEASE_0_3_5_PLAN.md): completed 0.3.5 threshold-inheritance removal and release record.
-- [archive/RELEASE_0_3_6_PLAN.md](archive/RELEASE_0_3_6_PLAN.md): completed 0.3.6 structured-output contract and release record.
-- [archive/plan_factory-diagnostics-output-integrity.md](archive/plan_factory-diagnostics-output-integrity.md): completed 0.3.8 JSON stdout integrity repair and release record.
+## Documentation lifecycle
+
+- A current document is listed in this file and owns one distinct purpose.
+- When two current documents explain the same contract, merge them into the
+  document closest to that contract and update every reference.
+- Move completed plans, release work records, handoffs, and superseded
+  overviews to `archive/`; retain a current-path stub only when an immutable
+  external record depends on that path.
+- Product installation, configuration, state/schema, migrations, diagnostics,
+  recovery, updates, and releases stay in this repository. Cross-product
+  wiring and compatibility projections belong to `dotagents`.

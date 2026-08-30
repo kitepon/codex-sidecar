@@ -9,8 +9,8 @@ Release the aligned `codex-sidecar-core`, `codex-sidecar-cli`, and
 Codex App Server 0.144.1 preflight, and unchanged caller-owned `generate`
 object/array output contracts.
 
-The upstream Caveat acceptance context is recorded in
-[`Caveat/docs/11_precision_and_runtime_reliability.md`](../../Caveat/docs/11_precision_and_runtime_reliability.md),
+The upstream Caveat acceptance context is recorded in the immutable
+[`docs/archive/11_precision_and_runtime_reliability.md`](https://github.com/kitepon/Caveat/blob/f6e45cbb9e5cd36c66b1d5571b9c3409cc9c1d9a/docs/archive/11_precision_and_runtime_reliability.md),
 Lane D. This plan does not change Caveat runtime behavior.
 
 ## Non-goals

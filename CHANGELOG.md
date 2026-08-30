@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+## [0.3.12] — 2026-08-30
+
+### Fixed
+- Declare Node.js 22.13.0 as the real minimum in the root and all three public
+  packages because `node:sqlite` is imported unconditionally without a flag.
+- Synchronize the lockfile with the workspace package versions so a clean
+  `--frozen-lockfile` install no longer fails before CI.
+- Make the product-owned local reusable workflow the only CI execution contract
+  and test that an external dotagents workflow cannot return unnoticed.
+
+### Release chain
+- Rebuilt commit `74af0c6fade8059e250578dab6f7880466835828` and matched the extracted
+  core, CLI, and MCP 0.3.11 package trees exactly to the npm registry artifacts.
+  This evidence permits the missing GitHub v0.3.11 record to be restored before
+  0.3.12 is published; it does not claim that the tag or release already exists.
+
 ## [0.3.11] — 2026-08-24
 
 ### Fixed
@@ -17,6 +33,19 @@
   新設`packages/core/src/platform.ts`の`isWin32()`predicateへ一本化した。エラーのcode・型・
   messageは従来どおり各所有moduleが保つ。`paths.ts`のバックスラッシュ正規化2箇所も
   ローカルヘルパへ統合。公開API・診断schemaは不変。
+
+## [0.3.9] — 2026-08-15
+
+### Fixed
+- Windows PowerShell 5.1のACL検証から親由来の`PSModulePath`を除き、module
+  autoload失敗を解消した。
+- Windows ACL検証の期限と重複process起動を修正し、正しいruntime error storeを
+  `unverified`として誤判定しないようにした。
+
+### Verified
+- macOS、Linux、Windows、WSL2のCI、npm 3 package、GitHub Release、Windows
+  native展開後の`factory-diagnostics`と`factory-errors`を受け入れた。詳細は
+  [ADR 0019](docs/adr/0019-windows-runtime-store-release-acceptance.md)を参照。
 
 ## [0.3.8] — 2026-07-19
 

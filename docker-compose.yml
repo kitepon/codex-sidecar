@@ -22,10 +22,10 @@ services:
       CODEX_SIDECAR_MCP_ALLOWED_HOSTS: "${CODEX_SIDECAR_MCP_ALLOWED_HOSTS:-192.168.1.2:39201,192.168.1.2,127.0.0.1:39201,127.0.0.1,localhost:39201,localhost}"
     volumes:
       # Share Codex CLI auth and session state with the host.
-      - ${CODEX_HOME_HOST:-/home/kite/.codex}:/root/.codex
+      - "${CODEX_HOME_HOST:-${HOME}/.codex}:/root/.codex"
       # Expose consumer repos under /projects/<name> so LAN clients can pass
       # projectRoot=/projects/<repo> when calling codex_review / codex_work etc.
-      - ${PROJECTS_HOST:-/home/kite/projects}:/projects
+      - "${PROJECTS_HOST:-${HOME}/projects}:/projects"
     logging:
       driver: json-file
       options:

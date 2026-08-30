@@ -1,6 +1,6 @@
 {
   "name": "codex-sidecar-mcp",
-  "version": "0.3.11",
+  "version": "0.3.12",
   "private": false,
   "license": "MIT",
   "author": {
@@ -29,12 +29,15 @@
     "prepublishOnly": "node ../../scripts/verify-release-commit.mjs"
   },
   "dependencies": {
-    "codex-sidecar-core": "workspace:0.3.11",
+    "codex-sidecar-core": "workspace:0.3.12",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=22.13.0"
   },
   "publishConfig": {
     "access": "public"

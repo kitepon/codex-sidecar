@@ -6,10 +6,10 @@
 
 [![npm version](https://img.shields.io/npm/v/codex-sidecar-cli.svg?color=cb3837&logo=npm&label=codex-sidecar-cli)](https://www.npmjs.com/package/codex-sidecar-cli)
 [![npm version](https://img.shields.io/npm/v/codex-sidecar-mcp.svg?color=cb3837&logo=npm&label=codex-sidecar-mcp)](https://www.npmjs.com/package/codex-sidecar-mcp)
-[![CI](https://github.com/kitepon-rgb/codex-sidecar/actions/workflows/ci.yml/badge.svg)](https://github.com/kitepon-rgb/codex-sidecar/actions/workflows/ci.yml)
+[![CI](https://github.com/kitepon/codex-sidecar/actions/workflows/ci.yml/badge.svg)](https://github.com/kitepon/codex-sidecar/actions/workflows/ci.yml)
 [![license](https://img.shields.io/npm/l/codex-sidecar-cli.svg?color=blue)](LICENSE)
 [![node](https://img.shields.io/node/v/codex-sidecar-cli.svg?color=339933&logo=node.js&logoColor=white)](https://nodejs.org)
-[![GitHub release](https://img.shields.io/github/v/release/kitepon-rgb/codex-sidecar?color=24292e&logo=github)](https://github.com/kitepon-rgb/codex-sidecar/releases)
+[![GitHub release](https://img.shields.io/github/v/release/kitepon/codex-sidecar?color=24292e&logo=github)](https://github.com/kitepon/codex-sidecar/releases)
 
 [English](README.md) · **日本語**
 
@@ -19,9 +19,13 @@
 [kitepon.dev](https://kitepon.dev/)を運営する[クオ（@QLyun35332）](https://x.com/QLyun35332)が
 開発・メンテナンスしています。
 
-**所有境界:** 本repositoryは隔離されたCodex実行を所有します。製品横断の導入・統合契約は、
-kitepon.devの製品開発を支える内部基盤
-[dotagents](https://github.com/kitepon-rgb/dotagents)が担当します。
+Node.js 22.13.0以降が必要です。coreは組み込み`node:sqlite`を実験flagなしで読み込むため、
+それより古いNodeは対応外です。
+
+**所有境界:** 本repositoryは単独でのinstall、設定、state/schema migration、診断、
+復旧、更新、release、隔離Codex実行を所有します。
+[dotagents](https://github.com/kitepon/dotagents)は公開contractを使って製品横断wireと
+互換性を統合しますが、本製品の内部運用を制御しません。
 
 [Usage](docs/USAGE.md) · [Architecture](docs/ARCHITECTURE.md) · [Protocol](docs/PROTOCOL.md)
 
@@ -91,6 +95,13 @@ codex-sidecar work \
 | `auditor` | `codex_auditor` | primary tool-use auditor 判定 | なし | `pass`, `missingTools` |
 | `generate` | `codex_generate` | freeform タスク向けに任意の構造化 JSON を生成 | なし | `generated`（生の JSON object/array） |
 | `work` | `codex_work` | 小さな実装作業 | 隔離 worktree のみ | `changedFiles`, `tests`, `worktreePath` |
+
+管理commandはworkflowと分離されています。`diagnostics`はlocal設定解決、
+`factory-diagnostics`はboundedなnative readiness、`factory-errors`は製品所有の
+runtime error storeのsnapshot/更新、`auth-status` / `auth-recover`は明示的なauth復旧、
+`work-start` / `work-result` / `work-cancel` / `work-recover` /
+`work-auth-recover`は耐久workを扱います。完全なoptionと安全境界は
+[利用ガイド](docs/USAGE.md)が正です。
 
 すべての workflow は `SidecarResult` JSON を返します。下流ツールは prose を読むのではなく、構造化 field を利用できます。`status` は `ok` / `failed` / `refused` / `dry-run` / `partial` のいずれかで、`partial` は「ターンは完走したが報告が schema から逸脱した」状態を表します。この場合、生報告は `unvalidatedReport` に保存され、無損失の正規化は `normalizationNotes` に開示されます（詳細は [docs/USAGE.md](docs/USAGE.md#degraded-report-status-partial)）。`codex_review` の呼び出しはおおむね次のような結果を返します:
 
@@ -189,7 +200,7 @@ codex-sidecar を提供でき、すべてのワークステーションに
 
 ```bash
 # sidecar を動かすホスト側
-git clone https://github.com/kitepon-rgb/codex-sidecar.git
+git clone https://github.com/kitepon/codex-sidecar.git
 cd codex-sidecar
 docker compose up -d --build
 ```
@@ -240,10 +251,9 @@ MCP クライアント設定例:
 ## 詳細
 
 - [docs/USAGE.md](docs/USAGE.md): CLI / MCP / worktree / raw log / structured result の使い方。
-- [docs/README.md](docs/README.md): docs index と archive map。
+- [docs/README.md](docs/README.md): 現役文書の唯一の索引、所有境界、archive規約。
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): package 境界、layering、安全 model、result contract。
 - [docs/PROTOCOL.md](docs/PROTOCOL.md): Codex App Server との protocol 境界。
-- [docs/archive/CODEX_MODEL_POLICY_TODO.md](docs/archive/CODEX_MODEL_POLICY_TODO.md): 完了済み Codex model policy 計画。
 
 ## 開発
 

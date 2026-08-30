@@ -1,137 +1,35 @@
-# TODO
+# Unresolved defects
 
-This file is the durable project task list. Keep it aligned with the current
-docs and the GitHub issues linked below.
+This file contains only reproduced, unresolved defects owned by `codex-sidecar`.
+Completed work is archived in
+[`TODO-completed-baseline-20260830.md`](archive/TODO-completed-baseline-20260830.md).
 
-## Current Priority
+## Reproduced on 2026-07-18
 
-Disconnect-safe long-running `codex_work` was completed in the 0.3.3 line:
-durable run state, detached execution, and result retrieval after MCP client
-restart are implemented and verified. The completed plan is archived at
-[LONG_RUNNING_WORK_RESILIENCE_PLAN.md](archive/LONG_RUNNING_WORK_RESILIENCE_PLAN.md).
-No repository-local P0 is currently marked Planned.
-
-The completed 0.3.3 publication and Docker verification record is archived at
-[RELEASE_0_3_3_PLAN.md](archive/RELEASE_0_3_3_PLAN.md).
-
-The completed 0.3.4 CLI/MCP version contract, publication, Docker smoke, and
-global installation record is archived at
-[CLI_VERSION_PLAN.md](archive/CLI_VERSION_PLAN.md).
-
-The 0.3.3 release record also covers explicit kill/auth recovery constraints,
-schema-partial preservation for completed worktrees, and isolated `CODEX_HOME`
-inheritance of the GPT-5.6 long-task context settings. MCP/server and provider
-tables remain excluded from that isolated configuration.
-
-Explicit Codex model selection is implemented in `codex-sidecar`; the Caveat
-advisory preset, hook routing, diagnostics, and real-model smoke were completed
-in Caveat v0.14.7. The completed plan is archived at
-[CODEX_MODEL_POLICY_TODO.md](archive/CODEX_MODEL_POLICY_TODO.md).
-
-The MCP npm-bin symlink startup bug is fixed in the 0.3.1 line. Keep the
-symlinked stdio-server regression test in place for future package and release
-changes.
-
-## Active Tasks
-
-| Priority | Task | Status | Issue |
-| --- | --- | --- | --- |
-| P0 | Normalize read-only workflows into structured `SidecarResult` fields | Done | [#1](https://github.com/kitepon-rgb/codex-sidecar/issues/1) |
-| P0 | Persist raw App Server event logs and diagnostics | Done | [#2](https://github.com/kitepon-rgb/codex-sidecar/issues/2) |
-| P1 | Expose timeout and cancellation controls for App Server turns | Done | [#3](https://github.com/kitepon-rgb/codex-sidecar/issues/3) |
-| P1 | Wire MCP tools to real sidecar execution | Done | [#4](https://github.com/kitepon-rgb/codex-sidecar/issues/4) |
-| P0 | Implement worktree-backed `codex_work` execution | Done | [#5](https://github.com/kitepon-rgb/codex-sidecar/issues/5) |
-| P2 | Add ecosystem adapters and fixture snapshots | Done | [#6](https://github.com/kitepon-rgb/codex-sidecar/issues/6) |
-| P0 | Add explicit Codex model policy for sidecar presets | Done | [CODEX_MODEL_POLICY_TODO.md](archive/CODEX_MODEL_POLICY_TODO.md) |
-| P0 | Fix npm symlinked `codex-sidecar-mcp` bin startup | Done | 0.3.1 |
-| P0 | Degrade schema-drifted structured reports to `status: "partial"` (salvage completed `codex_work` worktrees) instead of hard-failing | Done | [STRUCTURED_OUTPUT_TOLERANCE_PLAN.md](archive/STRUCTURED_OUTPUT_TOLERANCE_PLAN.md) |
-| P0 | Make long-running `codex_work` survive MCP client restart and expose durable result retrieval | Done | [LONG_RUNNING_WORK_RESILIENCE_PLAN.md](archive/LONG_RUNNING_WORK_RESILIENCE_PLAN.md) |
-| P2 | Add a supported `codex-sidecar --version` CLI flag | Done | [CLI_VERSION_PLAN.md](archive/CLI_VERSION_PLAN.md) |
-
-## Reproduced Defects (2026-07-18, dotagents R2 campaign, P1 triage pending)
-
-Observed on Mac during real dotagents operation. Register-first per the factory
-defect ruling; fix in independent gates on this repo.
-
-- [ ] **Stale sync-session auth lease blocks the work queue with no recovery
-  path.** A durable auth lease held by a dead sync-session (owner process gone,
-  no open journal handles) left `codex_work_start` queued at `auth-queue`
-  indefinitely. `codex_work_auth_recover` refuses with `RUN_AUTH_UNCERTAIN`
-  because the work run is not the lease owner, and no sync-session-side recovery
-  entrance exists. Reproduced: lease `gVodIdieIuKdK8sIeCFSKmZz` (backed up to
-  `~/Archives/codex-sidecar-stale-lease-gVodIdieIuKdK8sIeCFSKmZz` before manual
-  removal). Need: dead-owner detection (PID liveness + journal handle check) and
-  a lease takeover/release entrance that works from the queued work run.
-- [ ] **`codex-sidecar-mcp` startup hangs indefinitely when the durable lease
-  state is wedged.** A fresh Codex TUI blocked >12 minutes at "Starting MCP
-  servers: codex-sidecar" with no timeout and no error. Startup must not block
-  on lease/state acquisition; it should come up and report degraded status via
-  diagnostics instead.
-- [ ] **Session/process leak.** ~25 `codex-sidecar-mcp` processes accumulated
-  (mostly children of the ChatGPT.app Codex app-server, spawned Jul 17) and
-  `~/Library/Caches/codex-sidecar/auth-sessions/` held 96 session dirs. No
-  reaping/retention exists. Need idle-exit or parent-death detection plus
-  auth-session retention pruning.
-- [ ] **Caveat advisory integration fails on every prompt** (`advisory
-  unavailable: sidecar command failed`) on this Mac. Likely the same wedged
-  lease/state; re-verify after the above fixes and add a fast-fail diagnostic
-  reason instead of a truncated error.
-- [ ] **Read-only `codex_opinion` refused with `AUTH_LEASE_BUSY` while no other
-  sidecar work was intentionally running** (2026-07-18, dotagents LG G1, Mac;
-  raw log `Lattice/.codex-sidecar/logs/app-server/2026-07-18T074922149Z-opinion-a8524db8-*.jsonl`).
-  Read-only workflows serialized behind a (likely stale) auth lease forced the
-  caller to switch to the aiterm lane. After the stale-lease fixes, decide
-  whether read-only workflows need exclusive lease at all, or can queue with a
-  bounded wait + explicit busy-holder diagnostic (owner PID/session in `data`).
-
-## Local Lattice Sensor Setup
-
-Lattice is the formal successor that fully absorbed CodeGraph. Independent
-CodeGraph packages, MCP servers, and daemons are retired. Use the Lattice sensor
-for local symbol-graph context; its local index is intentionally ignored.
-
-Useful checks:
-
-```bash
-lattice sensor status /path/to/codex-sidecar --json
-```
-
-Do not treat sensor output as a replacement for direct file verification when
-making final claims or edits.
-
-## External Project Coordination
-
-These tasks belong to other repositories, but `codex-sidecar` work should
-actively trigger them when the integration boundary is reached.
-
-| Project | Trigger From This Repo | Required External Work | Issue |
-| --- | --- | --- | --- |
-| Throughline | When `SidecarContextBlock kind: "throughline_handoff"` needs more than read-only DB/CLI import, or when Codex sessions themselves should be captured/resumed. | Add first-class Codex session memory support in Throughline. | [Throughline #1](https://github.com/kitepon-rgb/Throughline/issues/1) |
-| Caveat | When `SidecarContextBlock kind: "caveat_entry"` needs automatic Codex prompt/error retrieval or Codex-origin record/update suggestions. | Add first-class Codex retrieval and recording support in Caveat. | [Caveat #10](https://github.com/kitepon-rgb/Caveat/issues/10) |
-
-Coordination rule: when model policy, context adapters, or sidecar workflow
-changes require upstream behavior, call out explicitly whether the next step
-belongs in `codex-sidecar`, Throughline, Caveat, or another consuming
-repository. Do not quietly implement cross-repo behavior in the wrong
-repository.
+- [ ] **A stale sync-session auth lease can block the work queue with no usable
+  recovery path.** A durable lease whose owner process was gone and whose
+  journal had no open handles left `codex_work_start` queued at `auth-queue`.
+  `codex_work_auth_recover` refused because the queued work run was not the
+  lease owner. Add dead-owner evidence and an exact sync-session recovery entry.
+- [ ] **`codex-sidecar-mcp` startup can hang indefinitely when durable lease
+  state is wedged.** A fresh Codex TUI remained at MCP startup for more than 12
+  minutes. Startup must remain bounded and expose degraded diagnostics instead
+  of waiting forever on lease/state acquisition.
+- [ ] **MCP processes and auth-session directories are not retained or reaped.**
+  About 25 `codex-sidecar-mcp` processes and 96 auth-session directories were
+  observed. Add a product-owned idle/parent-death lifecycle and retention rule.
+- [ ] **Caveat advisory integration fails on every prompt with only a truncated
+  sidecar error.** Reverify after the lease defects are fixed and return a
+  bounded diagnostic reason when the advisory path is unavailable.
+- [ ] **A read-only `codex_opinion` can be refused with `AUTH_LEASE_BUSY` while
+  no work was intentionally running.** After stale-lease recovery is fixed,
+  determine whether read-only workflows need the exclusive lease or a bounded
+  queue with explicit holder diagnostics.
 
 ## Rules
 
-- Keep this file high-level; put implementation detail in linked issues or
-  focused design docs.
-- Do not close a TODO entry until tests or smoke checks prove the behavior.
-- If a task cannot be completed as planned, record the explicit blocker instead
-  of silently changing scope.
-- `codex_work` must remain isolated in a git worktree; do not route it through
-  the active working tree for convenience.
-
-## Related Docs
-
-- [../README.md](../README.md): project overview and repository layout.
-- [../AGENTS.md](../AGENTS.md): working instructions for Codex and future agents.
-- [README.md](README.md): docs index and archive map.
-- [archive/CODEX_MODEL_POLICY_TODO.md](archive/CODEX_MODEL_POLICY_TODO.md): archived completed Codex model policy plan.
-- [ARCHITECTURE.md](ARCHITECTURE.md): package boundaries, layering, safety model, and result contract.
-- [PROTOCOL.md](PROTOCOL.md): Codex App Server protocol boundary and stable sidecar contracts.
-- [archive/PLAN.md](archive/PLAN.md): archived original phase roadmap.
-- [archive/LONG_RUNNING_WORK_RESILIENCE_PLAN.md](archive/LONG_RUNNING_WORK_RESILIENCE_PLAN.md): archived completed plan for disconnect-safe long-running work.
+- Keep only reproduced, unresolved product defects here. Move completed items
+  and release records to `docs/archive/`.
+- Do not close an item until a focused test or real smoke proves the behavior.
+- `codex_work` remains isolated in a git worktree; no recovery shortcut may
+  write into the active working tree.

@@ -4,20 +4,20 @@
 
 ユーザーとの会話は日本語で行う。
 
-グローバルな鉄の約束は `/home/kite/.codex/AGENTS.md` を正とする。
+このリポジトリ固有の判断は本ファイルと`docs/README.md`だけで完結させる。
+特定hostのglobal instructionや別repositoryを、製品開発の必須正本にしない。
 
 ## Project Purpose
 
-`codex-sidecar` は、kitepon-rgb の AI 開発基盤群から Codex を sidecar agent
+`codex-sidecar` は、kitepon.dev の AI 開発基盤群から Codex を sidecar agent
 として安全に呼び出すための共通実行レイヤー。
 
-単なる `codex review` CLI ではなく、Relay / Throughline / Caveat /
-SmartClaude / CodeGraph / image-generator / IP-MCP などの既存プロジェクトと並ぶ
-「AI 作業OS」の部品として設計する。Claude Code が主で動く環境に、
+単なる `codex review` CLI ではなく、Throughline / Caveat / Latticeなどの
+現役プロジェクトと接続できる「AI 作業OS」の部品として設計する。Claude Code が主で動く環境に、
 Codex の別視点、反対意見、レビュー、調査、限定的な修正能力を差し込む。
 
 同時に、汎用ツールとしても成立させる。設計は「generic core」と
-「kitepon-rgb ecosystem overlay」の二層に分ける。generic core は他の
+「kitepon.dev ecosystem overlay」の二層に分ける。generic core は他の
 リポジトリでも単体で使える CLI/MCP/安全実行基盤、overlay はユーザーの
 MCP/OAuth/hook/memory/cost 系プロジェクトに強く刺さる preset / safety profile /
 context adapter とする。
@@ -29,7 +29,8 @@ context adapter とする。
   になり得る。
 - 結果は人間向け文章だけでなく、他ツールが再利用できる machine-readable
   JSON として返す。
-- この repo の判断は、公開 GitHub の kitepon-rgb リポジトリ群の実態を前提にする。
+- このrepoは単独でinstall、設定、診断、復旧、更新、releaseできる。dotagentsは
+  公開contractを統合するが、製品内部の状態や運用判断を所有しない。
 
 対象 workflow と MCP tool:
 
@@ -39,6 +40,12 @@ context adapter とする。
 - CLI workflow `opinion` / MCP tool `codex_opinion`: 設計案への反対意見、見落とし、代替案の提示
 - CLI workflow `risk-check` / MCP tool `codex_risk_check`: OAuth / MCP / secrets / Docker / hooks / CI などの重点リスク確認
 - CLI workflow `auditor` / MCP tool `codex_auditor`: primary tool-use auditor 用の `pass` / `missingTools` 判定
+- CLI workflow `generate` / MCP tool `codex_generate`: caller所有schemaによる任意の構造化JSON生成
+
+製品管理用CLIは`diagnostics`、`factory-diagnostics`、`factory-errors`、
+`auth-status`、`auth-recover`と、耐久work用の`work-start` / `work-result` /
+`work-cancel` / `work-recover` / `work-auth-recover`を持つ。現在の全入口は
+`docs/USAGE.md`を正とする。
 
 非目的:
 
@@ -60,18 +67,14 @@ context adapter とする。
 
 ## Ecosystem Context
 
-設計時は以下の既存プロジェクトとの接続を常に意識する。
+現役の直接接続先は、明示handoffを渡す`Throughline`、罠contextを渡す`Caveat`、
+repository-localなsymbol contextを提供する`Lattice`である。`codex-sidecar`は
+それらを置き換えず、Codexを呼ぶ安全な実行境界、結果正規化、worktree隔離、
+App Server protocol追従だけを担当する。
 
-- `Relay`: Claude on iOS / Claude Code 間の会話・作業文脈を保存、検索、再開する MCP。
-- `Throughline`: Claude Code の transcript / tool I/O を圧縮し、明示 handoff で継承する。
-- `Caveat`: 罠、外部仕様の gotcha、repo-specific memory を markdown-in-git で保持する。
-- `SmartClaude`: Claude Code の token / context / MCP tool 定義コストを計測、最適化する。
-- `CodeGraph`: repository-local な symbol graph / semantic context を提供する。
-- `image-generator`: OAuth 2.1 + MCP hub + stdio-to-HTTP proxy の実装知見を持つ。
-- `IP-MCP`: official / unofficial source の分離、no fallback、quota-aware tool design の実例。
-
-`codex-sidecar` はこれらを置き換えない。Codex を呼ぶための安全な実行境界、
-結果正規化、worktree 隔離、App Server protocol 追従を担当する。
+公開済みcontext schemaの`relay_entry`、`smartclaude_cost_hint`、
+`codegraph_context`は後方互換名として維持する。これらの名前を、退役済み製品や
+外部daemonへのruntime依存が現在もあるという意味に読み替えない。
 
 ## Engineering Rules
 
@@ -85,14 +88,14 @@ context adapter とする。
   デフォルトで deny する方向を優先する。
 - source の混同を避ける。official / unofficial / inferred / observed などの
   信頼境界がある場合は result schema に明示する。
-- SmartClaude 的な観点で、Codex を呼ぶ価値、コスト、想定効果を結果に残せるようにする。
+- Codexを呼ぶ価値、コスト、想定効果を結果に残せるようにする。
 
 ## Commands
 
 想定コマンド:
 
 ```bash
-rtk git status --short --branch
+git status --short --branch
 corepack pnpm install
 corepack pnpm typecheck
 corepack pnpm test
@@ -102,16 +105,15 @@ corepack pnpm build
 この環境では bare `pnpm` shim が PATH にない場合がある。`corepack pnpm` を使う。
 勝手に別の package manager へ切り替えない。
 
-RTK は Codex グローバル指示で導入済み。shell コマンドは原則 `rtk` を先頭につける。
-正確な生出力が必要な検証では `rtk proxy <cmd>` を使う。
-
-CodeGraph MCP は Codex グローバルに `codegraph` として登録済み。この
-リポジトリの `.codegraph/` は初期化済みで、ローカル index として扱う。
+追加のglobal wrapperやMCP登録は開発の前提にしない。任意のLattice sensor indexは
+補助情報として使えるが、sourceの直接確認を置き換えない。
 
 ## Current Notes
 
-現在は CLI / MCP (stdio + Streamable HTTP) / read-only App Server / raw event log /
-timeout control / worktree-backed `codex_work` / ecosystem context adapters /
+現在のpackage版はrootと3 packageの`package.json`が正。CLI / MCP (stdio + Streamable HTTP) / read-only App
+Server / raw event log / timeout control / worktree-backed `codex_work` /
+耐久work制御 / auth recovery / product-owned runtime error store /
+`factory-diagnostics` / `factory-errors` / ecosystem context adapters /
 explicit Codex model policy が実装済み。
 MCP の HTTP transport は `CODEX_SIDECAR_MCP_TRANSPORT=http` で有効化し、
 `Dockerfile` + `docker-compose.yml` で LAN bind の sidecar として
@@ -128,8 +130,17 @@ MCP の HTTP transport は `CODEX_SIDECAR_MCP_TRANSPORT=http` で有効化し、
 ## Related Docs
 
 - [README.md](README.md): project overview and repository layout.
-- [docs/README.md](docs/README.md): docs index and archive map.
-- [docs/TODO.md](docs/TODO.md): durable task list, GitHub issues, and external coordination.
-- [docs/archive/CODEX_MODEL_POLICY_TODO.md](docs/archive/CODEX_MODEL_POLICY_TODO.md): archived completed Codex model policy plan.
+- [docs/README.md](docs/README.md): current docsの唯一の索引、所有境界、文書寿命。
+- [docs/TODO.md](docs/TODO.md): 未解決の再現済み製品欠陥だけを持つdurable task list。
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): package boundaries, layering, safety model, and result contract.
 - [docs/PROTOCOL.md](docs/PROTOCOL.md): Codex App Server protocol boundary and stable sidecar contracts.
+
+## Documentation Rules
+
+- 現役文書は`docs/README.md`に列挙する。同じ目的の現役文書は、contractに最も近い
+  1文書へmergeする。
+- 完了plan、handoff、release作業記録、置換済みoverviewは`docs/archive/`へ移す。
+  immutableな外部参照があるpathだけ、archiveへの短いstubを残す。
+- ADRとevidenceは判断・受入の履歴であり、現行操作の正本にしない。
+- install、config、state/schema、migration、diagnostics、recovery、update、releaseは
+  本repoが所有する。dotagentsには製品横断wireと互換projectionだけを置く。

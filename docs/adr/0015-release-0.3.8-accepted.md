@@ -6,7 +6,7 @@ Date: 2026-07-19
 
 完全JSON出力修理を含む`codex-sidecar` 0.3.8の公開を受け入れる。公開commitは
 `92a61198558df3e261c7d3a9e029877939db3d1a`であり、annotated tagと
-[GitHub Release v0.3.8](https://github.com/kitepon-rgb/codex-sidecar/releases/tag/v0.3.8)
+[GitHub Release v0.3.8](https://github.com/kitepon/codex-sidecar/releases/tag/v0.3.8)
 を同commitへ束縛する。
 
 npm packageは`codex-sidecar-core`、`codex-sidecar-cli`、
@@ -16,7 +16,7 @@ registry-safeな`codex-sidecar-core@0.3.8`へ依存する。
 ## Verification
 
 - publication commitに対するGitHub Actions run
-  [29664703626](https://github.com/kitepon-rgb/codex-sidecar/actions/runs/29664703626) がsuccess
+  [29664703626](https://github.com/kitepon/codex-sidecar/actions/runs/29664703626) がsuccess
 - core 268 tests、CLI 32 tests、MCP 19 tests、workspace typecheck / buildがgreen
 - Node 24でCLI 32 testsがgreen
 - fresh packed installとfresh registry installでCLI、MCP initialize、

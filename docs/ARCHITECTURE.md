@@ -5,7 +5,7 @@
 `codex-sidecar` keeps Codex orchestration in one independent project instead of
 scattering protocol handling across every consuming repository.
 
-The project is both a generic tool and part of kitepon-rgb's AI developer
+The project is both a generic tool and part of kitepon.dev's AI developer
 tooling ecosystem. Claude Code remains the primary working agent in that
 ecosystem; Codex is invoked as a sidecar for a second opinion, codebase
 investigation, risk analysis, and scoped work that should happen inside an
@@ -21,20 +21,23 @@ field rather than the only output.
 
 ## Ecosystem Fit
 
-`codex-sidecar` should compose with nearby projects instead of duplicating them:
+`codex-sidecar` composes with current neighboring products instead of
+duplicating them: Throughline supplies explicit handoffs, Caveat supplies trap
+context, and a repository-local Lattice sensor can supply symbol context. The
+sidecar receives plain JSON context, shapes it for Codex, runs the session, and
+returns normalized results. None of those products is required for standalone
+use.
 
-- Relay can provide saved cross-device conversation context.
-- Throughline can provide compressed session context and handoff memos.
-- Caveat can provide trap memories and repo-specific gotchas.
-- SmartClaude can decide whether a Codex call is worth the context/cost.
-- Lattice sensor can provide local symbol graph context when a consuming
-  repository has a Lattice sensor index.
-- image-generator contributes OAuth/MCP hub deployment patterns.
-- IP-MCP contributes source-boundary discipline and no-hidden-fallback rules.
+The published context kind names `relay_entry`, `smartclaude_cost_hint`, and
+`codegraph_context` remain accepted for wire compatibility. They do not create
+runtime imports or assert that the products named by those legacy identifiers
+remain active.
 
-The sidecar receives relevant context from those systems, shapes it for Codex,
-runs the session safely, and returns normalized results they can store, display,
-or act on.
+Integration ownership stays with the product that must change. If
+`throughline_handoff` needs more than read-only import or Codex sessions need
+capture/resume, Throughline owns that feature. If `caveat_entry` needs automatic
+prompt/error retrieval or Codex-origin record/update behavior, Caveat owns that
+feature. `codex-sidecar` owns only its plain-JSON adapters and execution boundary.
 
 ## Layering
 
@@ -54,10 +57,10 @@ This layer must be useful for any repository:
 
 ### Ecosystem Overlay
 
-This layer adds defaults and optional context for kitepon-rgb projects:
+This layer adds defaults and optional context for kitepon.dev projects:
 
 - safety profiles for MCP/OAuth/hooks/Docker/memory repos
-- context adapters for Relay, Throughline, Caveat, SmartClaude, and CodeGraph
+- plain-JSON context adapters, including current Throughline/Caveat input and legacy wire kinds
 - risk presets for source boundaries, token stores, hooks, and public endpoints
 - fixture projects that mirror the user's recurring repo shapes
 
@@ -87,6 +90,8 @@ Owns shared behavior:
 - global canonical-auth lease ownership for durable work
 - result schemas and JSON contract normalization
 - diagnostics and raw event log references
+- the product-owned runtime error store and its schema migration
+- native factory diagnostics and bounded runtime-error projections
 
 ### `packages/cli`
 
@@ -100,11 +105,14 @@ Provides local commands:
 - `codex-sidecar opinion`
 - `codex-sidecar risk-check`
 - `codex-sidecar auditor`
+- `codex-sidecar generate`
+- `codex-sidecar diagnostics`, `factory-diagnostics`, and `factory-errors`
+- `codex-sidecar auth-status` and `auth-recover`
 
 The CLI should stay thin and delegate policy decisions to `core`.
 
-The CLI is also the generic user-facing entrypoint. It should not require Relay,
-Throughline, Caveat, SmartClaude, CodeGraph, or any other ecosystem project.
+The CLI is also the generic user-facing entrypoint. It does not require
+Throughline, Caveat, Lattice, dotagents, or any other ecosystem project.
 
 Read-only workflows call Codex App Server through `core`. Write workflows run
 through isolated git worktrees and return reviewable changed-file metadata
@@ -276,6 +284,6 @@ Avoid:
 - [../README.md](../README.md): project overview and repository layout.
 - [../AGENTS.md](../AGENTS.md): working instructions for Codex and future agents.
 - [README.md](README.md): docs index and archive map.
-- [TODO.md](TODO.md): durable task list and linked GitHub issues.
+- [TODO.md](TODO.md): reproduced, unresolved product defects.
 - [archive/CODEX_MODEL_POLICY_TODO.md](archive/CODEX_MODEL_POLICY_TODO.md): archived completed Codex model policy plan.
 - [PROTOCOL.md](PROTOCOL.md): Codex App Server protocol boundary and stable sidecar contracts.

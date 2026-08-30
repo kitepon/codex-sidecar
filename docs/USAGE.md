@@ -13,6 +13,10 @@ returns the model's raw JSON value in the `generated` field (see
 
 ## Install And Build
 
+Node.js 22.13.0 or newer is required. `codex-sidecar-core` imports the built-in
+`node:sqlite` module unconditionally; 22.13.0 is the first Node 22 release that
+loads it without `--experimental-sqlite`.
+
 Install the CLI globally:
 
 ```bash
@@ -403,8 +407,8 @@ The compose file parameterizes bind host, port, and host paths via env:
 |---|---|---|
 | `CODEX_SIDECAR_BIND_HOST` | `192.168.1.2` | Host IP that the container's port is published on. Use a LAN IP, not `0.0.0.0`. |
 | `CODEX_SIDECAR_PORT` | `39201` | Published TCP port. |
-| `CODEX_HOME_HOST` | `/home/kite/.codex` | Host path mounted to `/root/.codex` inside the container, sharing Codex CLI auth and session state. |
-| `PROJECTS_HOST` | `/home/kite/projects` | Host path mounted to `/projects`. LAN clients pass `projectRoot=/projects/<repo>` (server-side paths). |
+| `CODEX_HOME_HOST` | `$HOME/.codex` | Host path mounted to `/root/.codex` inside the container, sharing Codex CLI auth and session state. |
+| `PROJECTS_HOST` | `$HOME/projects` | Host path mounted to `/projects`. LAN clients pass `projectRoot=/projects/<repo>` (server-side paths). |
 | `CODEX_SIDECAR_MCP_ALLOWED_HOSTS` | LAN bind variants | Override when binding to a different host. |
 
 Override via env or a sibling `.env` file:
@@ -800,9 +804,10 @@ fields. They should not infer success from prose.
 
 ## Ecosystem Adapter Notes
 
-Tools such as Caveat, Throughline, Spotter, Relay, or SmartClaude can call the
-CLI or MCP handlers without importing their internal project models. Use plain
-JSON context blocks when passing external memory or handoff data into core:
+Current products such as Caveat, Throughline, Lattice, and Spotter—or any
+generic caller—can call the CLI or MCP handlers without importing their internal
+project models. Use plain JSON context blocks when passing external memory or
+handoff data into core:
 
 ```json
 {
@@ -828,6 +833,11 @@ Known context block kinds:
 - `smartclaude_cost_hint`
 - `codegraph_context`
 - `manual_note`
+
+`relay_entry`, `smartclaude_cost_hint`, and `codegraph_context` are retained as
+published legacy wire names. Their acceptance does not create a runtime
+dependency on retired products; new generic integrations may use `manual_note`
+when no current product-specific kind applies.
 
 Practical integration pattern:
 
@@ -895,6 +905,8 @@ steps in one shell so `RELEASE_VERSION`, `pnpm_release`, and
 4. Inspect each package before publication. First inspect the dry-run file list,
    then inspect each produced tarball's `package.json` and confirm that CLI/MCP
    depend on the registry version of `codex-sidecar-core`, not `workspace:`.
+   Install all three tarballs into an empty prefix and run the CLI and MCP with
+   Node 22.13.0 before treating the artifacts as releasable.
 
    ```bash
    (cd packages/core && npm pack --dry-run)
@@ -906,6 +918,21 @@ steps in one shell so `RELEASE_VERSION`, `pnpm_release`, and
    (cd packages/mcp && pnpm_release pack --pack-destination "$PACK_DIR")
    tar -xOf "$PACK_DIR"/codex-sidecar-cli-*.tgz package/package.json
    tar -xOf "$PACK_DIR"/codex-sidecar-mcp-*.tgz package/package.json
+   INSTALL_DIR=$(mktemp -d)
+   npm install --prefix "$INSTALL_DIR" \
+     "$PACK_DIR"/codex-sidecar-core-"$RELEASE_VERSION".tgz \
+     "$PACK_DIR"/codex-sidecar-cli-"$RELEASE_VERSION".tgz \
+     "$PACK_DIR"/codex-sidecar-mcp-"$RELEASE_VERSION".tgz
+   MIN_NODE=(npx --yes node@22.13.0)
+   test "$("${MIN_NODE[@]}" "$INSTALL_DIR/node_modules/codex-sidecar-cli/dist/index.js" --version)" = "$RELEASE_VERSION"
+   HOME="$INSTALL_DIR/home" XDG_CACHE_HOME="$INSTALL_DIR/cache" \
+     "${MIN_NODE[@]}" "$INSTALL_DIR/node_modules/codex-sidecar-cli/dist/index.js" \
+     factory-errors --action snapshot >/dev/null
+   MCP_INIT='{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","clientInfo":{"name":"release-smoke","version":"0"},"capabilities":{}}}'
+   printf '%s\n' "$MCP_INIT" | \
+     "${MIN_NODE[@]}" "$INSTALL_DIR/node_modules/codex-sidecar-mcp/dist/server.js" \
+     | grep -F "\"version\":\"$RELEASE_VERSION\""
+   rm -rf "$INSTALL_DIR"
    ```
 
 5. Commit the release record with explicit pathspecs, require a clean tree,
@@ -1005,7 +1032,12 @@ steps in one shell so `RELEASE_VERSION`, `pnpm_release`, and
 
 9. Create the tag and GitHub release at the exact verified publication commit
    after the registry versions are available. Resolve the local tag back to that
-   commit and verify that the GitHub release names the tag.
+   commit and verify that the GitHub release names the tag. A release is not
+   complete while npm `latest` is newer than the latest GitHub Release. If a
+   historical GitHub record is missing, first rebuild that exact commit and
+   compare every extracted tarball file with the registry artifact; only then
+   may the missing tag/release be backfilled. The 0.3.11 reconstruction is
+   recorded in [its provenance evidence](evidence/2026-08-30-0.3.11-artifact-provenance.md).
 
    ```bash
    RELEASE_SHA=$PUBLISH_SHA
@@ -1067,5 +1099,5 @@ codex-sidecar explore \
 - [README.md](README.md): docs index and archive map.
 - [ARCHITECTURE.md](ARCHITECTURE.md): package boundaries, layering, safety model, and result contract.
 - [PROTOCOL.md](PROTOCOL.md): Codex App Server protocol boundary and stable sidecar contracts.
-- [TODO.md](TODO.md): durable task list and linked GitHub issues.
+- [TODO.md](TODO.md): reproduced, unresolved product defects.
 - [archive/CODEX_MODEL_POLICY_TODO.md](archive/CODEX_MODEL_POLICY_TODO.md): archived completed Codex model policy plan.

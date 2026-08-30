@@ -1,6 +1,6 @@
 {
   "name": "codex-sidecar",
-  "version": "0.3.11",
+  "version": "0.3.12",
   "private": true,
   "description": "Shared Codex sidecar agent bridge for reviews, exploration, and scoped work.",
   "license": "MIT",
@@ -21,12 +21,16 @@
     "build": "corepack pnpm -r build",
     "typecheck": "corepack pnpm --filter codex-sidecar-core build && corepack pnpm -r typecheck",
     "lint": "corepack pnpm -r lint",
-    "test:release-gate": "node --test scripts/verify-release-commit.test.mjs",
+    "test:release-gate": "node --test scripts/verify-release-commit.test.mjs scripts/repository-contract.test.mjs",
+    "test:repository-contract": "node --test scripts/repository-contract.test.mjs",
     "test": "corepack pnpm --filter codex-sidecar-core test && corepack pnpm --filter codex-sidecar-cli test && corepack pnpm --filter codex-sidecar-mcp test"
   },
   "devDependencies": {
     "@types/node": "^22.15.3",
     "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=22.13.0"
   },
   "packageManager": "pnpm@10.10.0"
 }

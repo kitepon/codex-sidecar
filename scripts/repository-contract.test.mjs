@@ -50,9 +50,15 @@ test("公開packageはversionとNode最低版を一意に共有する", async ()
 
 test("CIは製品所有のlocal reusable workflowだけを呼ぶ", async () => {
   const ci = await readFile(path.join(projectDirectory, ".github/workflows/ci.yml"), "utf8");
+  const productFull = await readFile(
+    path.join(projectDirectory, ".github/workflows/product-full-ci.yml"),
+    "utf8"
+  );
   assert.match(ci, /uses:\s*\.\/\.github\/workflows\/product-full-ci\.yml/);
   assert.doesNotMatch(ci, /kitepon\/dotagents\/.github\/workflows/);
   assert.match(ci, /documentation-command:\s*node --test scripts\/repository-contract\.test\.mjs/);
+  assert.equal((productFull.match(/shell:\s*pwsh/g) ?? []).length, 3);
+  assert.doesNotMatch(productFull, /Progra~1\\Git\\bin\\bash\.exe/);
   await access(path.join(projectDirectory, ".github/workflows/product-full-ci.yml"));
 });
 

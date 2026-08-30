@@ -38,7 +38,9 @@ jobs:
     with:
       environment: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'all' }}
       dependency-command: corepack pnpm install --frozen-lockfile
-      documentation-command: node --test scripts/repository-contract.test.mjs
+      documentation-command: >-
+        corepack pnpm install --frozen-lockfile &&
+        node --test scripts/repository-contract.test.mjs
       full-command: >-
         corepack pnpm typecheck &&
         corepack pnpm lint &&

@@ -42,7 +42,7 @@ context adapter とする。
 - CLI workflow `auditor` / MCP tool `codex_auditor`: primary tool-use auditor 用の `pass` / `missingTools` 判定
 - CLI workflow `generate` / MCP tool `codex_generate`: caller所有schemaによる任意の構造化JSON生成
 
-製品管理用CLIは`diagnostics`、`factory-diagnostics`、`factory-errors`、
+製品管理用CLIは`setup`、`diagnostics`、`factory-diagnostics`、`factory-errors`、
 `auth-status`、`auth-recover`と、耐久work用の`work-start` / `work-result` /
 `work-cancel` / `work-recover` / `work-auth-recover`を持つ。現在の全入口は
 `docs/USAGE.md`を正とする。
@@ -83,6 +83,7 @@ App Server protocol追従だけを担当する。
 - 書き込み可能 workflow では `allowed_paths` を必須にし、`deny_paths` を尊重する。
 - safety / config / prompt shaping は `packages/core` に寄せ、CLI と MCP は薄く保つ。
 - protocol 追従や Codex App Server の lifecycle は `packages/core` に閉じ込める。
+- 導入・更新のMCP登録は`codex-sidecar setup`だけが所有する。OS/AI adapterと機能対応はcoreに置き、3 packageはそれぞれ同じ公開版へ更新する。
 - 隠れたフォールバックで危険操作を進めない。失敗は明示的に返す。
 - secrets / token / `.env` / OAuth DB / SQLite DB / hook config / deploy config は
   デフォルトで deny する方向を優先する。

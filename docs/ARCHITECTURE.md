@@ -48,6 +48,7 @@ The architecture has two layers.
 This layer must be useful for any repository:
 
 - config loading
+- 製品導入・MCP登録、読戻し、登録されたプロセスへのMCP診断呼出し
 - preset resolution
 - path safety
 - App Server protocol handling
@@ -92,10 +93,13 @@ Owns shared behavior:
 - diagnostics and raw event log references
 - the product-owned runtime error store and its schema migration
 - native factory diagnostics and bounded runtime-error projections
+- setupの状態・backup、AI別JSON/TOML adapter、Windows npm shim解決、OS別能力判定
 
 ### `packages/cli`
 
 Provides local commands:
+
+- `codex-sidecar setup`と`setup --check`
 
 - `codex-sidecar review`
 - `codex-sidecar explore`
@@ -141,6 +145,8 @@ directory, which is the isolated worktree for async work.
 ### `packages/mcp`
 
 Provides an MCP server for Claude Code:
+
+- `codex_sidecar_status`（認証とproject設定を使わない製品診断）
 
 - `codex_review`
 - `codex_explore`
@@ -206,6 +212,14 @@ Inside `packages/core/src`:
 - `diagnostics`: config and normalized-request checks through CLI and dry-run surfaces
 
 ## Safety Model
+
+導入は`setupSidecar`が所有し、CLIは引数を渡す。初回・再実行・更新を同じ処理で扱う。
+共有AI設定では`codex-sidecar`のcommand/argsだけを更新し、env・timeout・無効化・所有外の値を保持する。
+Claudeの同じuserファイル内の既存local登録も対象とする。別projectの設定へは書き込まない。
+設定のbackup、保存前の外部変更検知、保存後の読戻し、MCP実効確認を同じ入口で行う。
+3 packageの独立配布、project設定必須、認証leaseとisolated homeの既存契約は変えない。
+Windowsの未対応理由は`platform.ts`へ集約し、各moduleが必要な能力を参照する。
+OSごとのshim解決もcoreが持ち、CLIの既存importは互換入口だけを残す。
 
 Read-only workflows may inspect files and git state inside the target project.
 Write workflows must use an isolated git worktree and must be constrained by

@@ -36,17 +36,24 @@ Codex の既存 model 設定を継承することも、workflow ごとに明示�
 
 ## 30 秒で試す
 
-workspace を build:
+初回・更新とも、3 packageをインストールして同じsetupを実行します:
 
 ```bash
-npm install -g codex-sidecar-cli
-npm install -g codex-sidecar-mcp
+npm install -g codex-sidecar-core@latest codex-sidecar-cli@latest codex-sidecar-mcp@latest
+codex-sidecar setup
 codex-sidecar --version
 ```
 
 `codex-sidecar-mcp` は npm の `bin` として配布されます。global install では
 PATH 上のコマンドが symlink になるため、この symlink 経由でも MCP stdio
 server が起動することをテストで固定しています。
+
+setupはClaude・Codex・Grok・Cursorの既存設定を保持してstdio登録を更新し、読戻した登録で
+MCPツール呼出しまで確認します。工場の設定代行は不要です。
+変更せず確認する場合は`codex-sidecar setup --check`を使います。
+[導入・更新の契約](docs/USAGE.md#standalone-setup)と[OS別機能対応](docs/PLATFORM_SUPPORT.md)を参照してください。
+Windows nativeでもMCP登録・接続・設定診断・同期dry-runが使えます。Codex実行と耐久workは
+POSIXの認証保護とprocess groupに依存するため未対応です。
 
 source から build する場合:
 
@@ -96,7 +103,7 @@ codex-sidecar work \
 | `generate` | `codex_generate` | freeform タスク向けに任意の構造化 JSON を生成 | なし | `generated`（生の JSON object/array） |
 | `work` | `codex_work` | 小さな実装作業 | 隔離 worktree のみ | `changedFiles`, `tests`, `worktreePath` |
 
-管理commandはworkflowと分離されています。`diagnostics`はlocal設定解決、
+管理commandはworkflowと分離されています。`setup`は導入・MCP登録と実効確認、`diagnostics`はlocal設定解決、
 `factory-diagnostics`はboundedなnative readiness、`factory-errors`は製品所有の
 runtime error storeのsnapshot/更新、`auth-status` / `auth-recover`は明示的なauth復旧、
 `work-start` / `work-result` / `work-cancel` / `work-recover` /

@@ -191,10 +191,11 @@ test("repository内のMarkdownはローカルリンク切れを持たない", as
 
 test("公開packageは自己完結したREADMEを同梱する", async () => {
   for (const packageDirectory of ["packages/core", "packages/cli", "packages/mcp"]) {
-    const packed = JSON.parse(execFileSync("npm", ["pack", "--dry-run", "--ignore-scripts", "--json"], {
+    // npm 11の配列とnpm 12のpackage名keyのobjectを、どちらも値の一覧として読む。
+    const [packed] = Object.values(JSON.parse(execFileSync("npm", ["pack", "--dry-run", "--ignore-scripts", "--json"], {
       cwd: path.join(projectDirectory, packageDirectory),
       encoding: "utf8",
-    }))[0];
+    })));
     const files = new Set(packed.files.map((entry) => entry.path));
     assert.ok(files.has("README.md"), `${packageDirectory} must ship README.md`);
     for (const markdownPath of [...files].filter((file) => /\.md$/i.test(file))) {

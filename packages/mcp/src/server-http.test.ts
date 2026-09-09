@@ -41,7 +41,7 @@ test("http transport starts, lists tools, and rejects bad bearer", async () => {
       const tools = await client.listTools();
       assert.deepEqual(
         tools.tools.map((tool) => tool.name).sort(),
-        toolDescriptors.map((tool) => tool.name).slice().sort(),
+        ["codex_sidecar_status", ...toolDescriptors.map((tool) => tool.name)].sort(),
       );
     } finally {
       await client.close().catch(() => undefined);

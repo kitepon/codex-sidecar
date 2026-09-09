@@ -15,6 +15,7 @@ const windowsApplicable = new Set([
   "process-group.test.js",
   "run-types.test.js",
   "safety.test.js",
+  "setup.test.js",
   "structured-output.test.js",
   "windows-platform.test.js",
   "worktree.test.js",

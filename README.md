@@ -41,22 +41,29 @@ to make Codex useful as a controlled companion process inside real repositories.
 
 ## 30 Seconds
 
-Install the CLI globally:
+初回・更新とも、3 packageをインストールして同じsetupを実行します:
 
 ```bash
-npm install -g codex-sidecar-cli
+npm install -g codex-sidecar-core@latest codex-sidecar-cli@latest codex-sidecar-mcp@latest
+codex-sidecar setup
 codex-sidecar --version
 ```
 
-Install the MCP stdio server globally when a client wants a command on PATH:
+登録を変更せず診断する場合:
 
 ```bash
-npm install -g codex-sidecar-mcp
+codex-sidecar setup --check
 ```
 
 The MCP package is distributed as an npm `bin`. npm global installs normally
 place a symlink on PATH, and `codex-sidecar-mcp` is tested to start correctly
 through that symlinked command.
+
+setupはClaude・Codex・Grok・Cursorの既存設定を保持してstdio登録を更新し、読戻した登録で
+MCPツール呼出しまで確認します。工場の設定代行は不要です。
+[導入・更新の契約](docs/USAGE.md#standalone-setup)と[OS別機能対応](docs/PLATFORM_SUPPORT.md)を参照してください。
+Windows nativeでもMCP登録・接続・設定診断・同期dry-runが使えます。Codex実行と耐久workは
+POSIXの認証保護とprocess groupに依存するため未対応です。
 
 Build from source:
 
@@ -107,13 +114,11 @@ inspect the diff before applying anything.
 | `generate` | `codex_generate` | Generate arbitrary structured JSON for a freeform task | No | `generated` (raw JSON object/array) |
 | `work` | `codex_work` | Implement a small scoped change | Isolated worktree only | `changedFiles`, `tests`, `worktreePath` |
 
-Management commands are separate from workflows: `diagnostics` resolves local
-configuration, `factory-diagnostics` reports bounded native readiness,
-`factory-errors` snapshots or updates the product-owned runtime error store,
-`auth-status` / `auth-recover` handle explicit auth recovery, and
-`work-start` / `work-result` / `work-cancel` / `work-recover` /
-`work-auth-recover` control durable work. See [the usage guide](docs/USAGE.md)
-for their complete options and safety constraints.
+管理commandはworkflowと分かれています。`setup`はMCP登録と実効確認、`diagnostics`は
+local設定の解決、`factory-diagnostics`はnative readiness、`factory-errors`は製品所有の
+runtime error storeの取得・更新を担当します。`auth-status` / `auth-recover`は認証の診断・復旧、
+`work-start` / `work-result` / `work-cancel` / `work-recover` / `work-auth-recover`は耐久workの操作入口です。
+全オプションと安全上の契約は[利用ガイド](docs/USAGE.md)を参照してください。
 
 Every workflow returns one `SidecarResult` JSON object. Downstream tools should
 consume the structured fields instead of scraping prose. `status` is `ok`,

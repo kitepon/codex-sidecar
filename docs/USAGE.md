@@ -17,18 +17,16 @@ Node.js 22.13.0 or newer is required. `codex-sidecar-core` imports the built-in
 `node:sqlite` module unconditionally; 22.13.0 is the first Node 22 release that
 loads it without `--experimental-sqlite`.
 
-Install the CLI globally:
+初回と更新では、core・CLI・MCPをそれぞれ同じ公開版でインストールし、同じsetupを実行します。
 
 ```bash
-npm install -g codex-sidecar-cli
+npm install -g codex-sidecar-core@latest codex-sidecar-cli@latest codex-sidecar-mcp@latest
+codex-sidecar setup
 codex-sidecar --version
 ```
 
-Install the MCP stdio server globally when a client should launch it by command:
-
-```bash
-npm install -g codex-sidecar-mcp
-```
+3 packageは独立した配布物です。setupは不足や版の不一致を非0終了で報告します。
+WindowsでもPowerShell 7から同じnpmコマンドとsetupを使います。
 
 The installed `codex-sidecar-mcp` command is expected to be an npm `bin`
 symlink. The server entrypoint resolves that symlink before deciding whether the
@@ -61,6 +59,63 @@ how npm global installs and MCP clients launch the package.
 If the repository is used through scripts or an MCP server, keep the same
 package manager path. This project expects `corepack pnpm`, not a different
 package manager.
+
+## Standalone Setup
+
+`codex-sidecar setup`が製品全体の導入設定入口です。工場のcheckoutや設定代行は不要です。
+初回・再実行・npm更新後に同じ処理を使い、packageの版、設定形式、MCP起動、ツール応答を確認します。
+引数なしでは4 AIすべてにuser設定を登録します。AI本体のインストールやログインを代行するコマンドではありません。
+
+```bash
+codex-sidecar setup
+codex-sidecar setup --ai claude,codex
+codex-sidecar setup --check
+codex-sidecar setup --check --project /path/to/project
+```
+
+- `--ai all|claude,codex,grok,cursor`: 対象を選択します。省略時はallです。
+- `--check`: 同じ前提確認・読戻し・MCP実効確認を行い、設定を書き換えません。未登録や古い登録は非0終了です。
+- `--project <dir>`と任意の`--config <file>`: 既存project設定を使うMCP dry-runも確認します。設定ファイルを作成しません。
+- `--json`: 出力がJSONであることの明示です。省略してもJSONを返します。
+
+| AI | 製品が更新するuser設定 | 登録キー |
+| --- | --- | --- |
+| Claude Code | `~/.claude.json`（`CLAUDE_CONFIG_DIR`指定時はその中の`.claude.json`） | `mcpServers.codex-sidecar`と同ファイル内の既存local登録 |
+| Codex | `$CODEX_HOME/config.toml`、未指定時は`~/.codex/config.toml` | `mcp_servers.codex-sidecar` |
+| Grok | `~/.grok/config.toml` | `mcp_servers.codex-sidecar` |
+| Cursor | `~/.cursor/mcp.json` | `mcpServers.codex-sidecar` |
+
+OSに合うnpm入口を製品内で解決し、起動コマンドと引数を更新します。
+POSIXのsymlinkとWindowsの公式npm shimを扱い、WindowsではNode本体とMCP entrypointを
+直接登録します。Nodeやnpmの配置が変わった場合も、同じsetupが解決し直します。
+env、timeout、無効化、ツール制限、他製品の登録、その他の設定値を保持します。
+JSON/TOMLは再整形され、コメントと空白の維持は保証しません。再実行で意味上の差がなければbytesも変更しません。
+
+無効なJSON/TOML、同名のHTTP/SSE登録、未解決の環境変数、未対応の`envFile`・remote実行・相対`cwd`、設定ファイルのsymlinkは
+変更前に明示的なエラーになります。対象projectに同名の上書き登録があれば`SETUP_SCOPE_CONFLICT`で停止し、
+所有外projectのMCP設定を変更しません。Claudeの同ファイル内のlocal登録は優先順位に従って確認します。
+この確認のprojectは`--project`、省略時は現在のディレクトリです。
+
+既存設定のバックアップは`~/.codex-sidecar/setup-backups/`へ作り、結果にそのpathを返します。
+設定ごとに保存直前の外部変更を検知し、一時ファイルから置換して読戻します。
+4ファイルを跨ぐトランザクションではありません。途中で失敗した場合、完了した登録とbackupが結果に残り、
+原因を解消して同じsetupを再実行すれば続行できます。共有AI設定への他製品の導入と同時に実行しないでください。
+中断で`~/.codex-sidecar/setup.lock`が残った場合は、そのsetupプロセスが終了したことを確認してからロックだけを削除します。
+
+実効確認は、読戻した登録のcommand・args・env・絶対`cwd`・起動timeoutを使うMCPのinitialize、tools/list、
+`codex_sidecar_status`呼出しです。CLI、実行中MCP、そのMCPが使うcoreの版が一致しなければ失敗します。
+明示的な無効化は保持し、該当登録は接続せず`verification: "disabled"`を返します。
+`verification: "verified"`は登録されたMCPプロセスの確認を意味します。起動中のAIアプリの再読込、
+組織の許可policy、Codexによる実モデル実行を確認したという意味ではありません。
+
+setupは`auth.json`、認証lease、projectの`.codex-sidecar.yml`を変更しません。
+Codexを使うworkflowには、別途公式Codex CLI、Git、Codexのログイン、既存project設定が必要です。
+WindowsではMCP・診断・同期dry-runを利用できますが、POSIXの認証保護やprocess groupに依存する
+実行機能は`RUN_UNSUPPORTED_PLATFORM`を返します。対応表は[OS別機能対応](PLATFORM_SUPPORT.md)が正です。
+
+`status: "failed"`は常に非0終了です。主な`error.code`は`SETUP_MCP_MISSING`、
+`SETUP_VERSION_MISMATCH`、`SETUP_CONFIG_INVALID`、`SETUP_REGISTRATION_STALE`、
+`SETUP_SCOPE_CONFLICT`、`SETUP_MCP_FAILED`です。設定内容・env値・serverのstderrをエラー出力へ転載しません。
 
 ## Project Config
 
@@ -508,6 +563,9 @@ sudo ufw delete allow from 192.168.1.0/24 to any port 39201 proto tcp
 
 ## MCP Tools
 
+管理用の`codex_sidecar_status`は入力なしでcore版とOS別機能対応を返します。
+project設定や認証を読み取らず、Codexを起動しません。setupはこのtoolを実際に呼び出して接続を確認します。
+
 `packages/mcp` exposes read-only and synchronous work tools plus durable work
 controls backed by the same core execution
 path as the CLI:
@@ -899,7 +957,9 @@ steps in one shell so `RELEASE_VERSION`, `pnpm_release`, and
    pnpm_release --filter codex-sidecar-core test
    pnpm_release --filter codex-sidecar-cli test
    pnpm_release --filter codex-sidecar-mcp test
+   node --test scripts/setup-integration.test.mjs
    pnpm_release -r build
+   node scripts/render-platform-support.mjs --check
    ```
 
 4. Inspect each package before publication. First inspect the dry-run file list,

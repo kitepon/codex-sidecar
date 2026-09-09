@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { isWin32 } from "./platform.js";
+import { requirePlatformCapability } from "./platform.js";
 import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
@@ -7,11 +7,12 @@ const execFileAsync = promisify(execFile);
 export interface ProcessIdentity { pid: number; startIdentity: string; }
 
 export async function currentProcessIdentity(): Promise<ProcessIdentity> {
-  if (isWin32()) throw Object.assign(new Error("RUN_UNSUPPORTED_PLATFORM: launch requires POSIX"), { code: "RUN_UNSUPPORTED_PLATFORM" });
+  requirePlatformCapability("processIdentity");
   return { pid: process.pid, startIdentity: await processStartIdentity(process.pid) };
 }
 
 export async function processStartIdentity(pid: number): Promise<string> {
+  requirePlatformCapability("processIdentity");
   const { stdout } = await execFileAsync("ps", ["-p", String(pid), "-o", "lstart="], { encoding: "utf8" });
   const value = stdout.trim();
   if (!value) throw new Error(`process ${pid} is not observable`);

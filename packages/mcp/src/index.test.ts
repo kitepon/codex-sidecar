@@ -465,7 +465,7 @@ test("stdio server starts when invoked through a symlinked bin path", async () =
 
     assert.deepEqual(
       tools.tools.map((tool) => tool.name),
-      toolDescriptors.map((tool) => tool.name),
+      ["codex_sidecar_status", ...toolDescriptors.map((tool) => tool.name)],
     );
     const start = tools.tools.find((tool) => tool.name === "codex_work_start");
     const result = tools.tools.find((tool) => tool.name === "codex_work_result");

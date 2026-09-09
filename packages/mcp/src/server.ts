@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+import { sidecarProductStatus } from "codex-sidecar-core";
 import {
   handleCodexSidecarToolCall,
   toolDescriptors,
@@ -92,6 +93,15 @@ export function buildCodexSidecarMcpServer(): McpServer {
     { name: "codex-sidecar", version: readMcpVersion() },
     { capabilities: { tools: {} } },
   );
+
+  server.registerTool("codex_sidecar_status", {
+    description: "製品のcore版とOS別機能対応を確認します。project設定や認証情報を読み取らず、Codexを起動しません。",
+    inputSchema: {},
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  }, async () => {
+    const status = sidecarProductStatus();
+    return { content: [{ type: "text", text: JSON.stringify(status) }], structuredContent: status };
+  });
 
   for (const descriptor of toolDescriptors) {
     server.registerTool(

@@ -1,5 +1,5 @@
 import { constants } from "node:fs";
-import { isWin32 } from "./platform.js";
+import { platformLimitation } from "./platform.js";
 import { link, lstat, mkdir, open, realpath, rm } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
 import { join, resolve } from "node:path";
@@ -256,4 +256,4 @@ function object(value: unknown): value is Record<string, any> { return value !==
 function sameKeys(value: Record<string, unknown>, keys: string[]): boolean { const actual = Object.keys(value).sort(); const expected = [...keys].sort(); return actual.length === expected.length && actual.every((key, index) => key === expected[index]); }
 function date(value: unknown): boolean { return typeof value === "string" && Number.isFinite(Date.parse(value)); }
 function uncertain(message: string, cause: unknown): RunStoreError { return new RunStoreError("RUN_STORE_CORRUPT", `${message}: ${cause instanceof Error ? cause.message : String(cause)}`); }
-function unsupported(): void { if (isWin32()) throw new RunStoreError("RUN_UNSUPPORTED_PLATFORM", "run transitions require POSIX hard links"); }
+function unsupported(): void { const reason = platformLimitation("runTransition"); if (reason) throw new RunStoreError("RUN_UNSUPPORTED_PLATFORM", reason); }

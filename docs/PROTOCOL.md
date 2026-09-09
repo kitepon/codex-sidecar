@@ -5,6 +5,18 @@ not as a general OpenAI API gateway.
 
 ## Principles
 
+導入の公開契約はCLI `setup` / `setup --check`と、MCP `codex_sidecar_status`を使う。
+setupは`schemaVersion: "1"`のJSONで`status`、`mode`、`version`、`platform`、
+`capabilities`、AI別の`clients`を返す。失敗は`status: "failed"`と`error.code`で示し、CLIは非0終了する。
+各clientは登録の作成・更新・不変・古い状態と、`verified` / `disabled` / `pending`を区別する。
+登録後のMCP initialize、tools/list、status呼出しが成功して初めて`verified`となる。
+認証を必要とするCodex workflowの成功とは区別する。
+
+`codex_sidecar_status`は入力なしで`schemaVersion: "1"`、`status: "ok"`、`coreVersion`、
+`platform`、OS能力を返す。project設定・authを読むこともCodexを起動することもない。
+既存workflowの`SidecarRequest` / `SidecarResult`と耐久runのunionは変更しない。
+setupの保存範囲と復旧手順は[利用ガイド](USAGE.md#standalone-setup)、機能対応は[OS対応表](PLATFORM_SUPPORT.md)が正本である。
+
 - Keep App Server startup, shutdown, and session lifecycle in `packages/core`.
 - Normalize Codex events into sidecar result types before exposing them through
   CLI or MCP.

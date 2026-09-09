@@ -11,7 +11,7 @@ Use `corepack pnpm`. Bare `pnpm` is not guaranteed to be on PATH in this environ
 ```bash
 corepack pnpm install
 corepack pnpm typecheck   # builds core first, then typechecks every package
-corepack pnpm test        # core + mcp tests
+corepack pnpm test        # core・CLI・MCPと導入結合試験
 corepack pnpm build
 ```
 
@@ -30,7 +30,10 @@ Test runner is `node --test` against **compiled** `dist/*.test.js`, not source. 
 - Filtering by test name uses node's native runner: `node --test --test-name-pattern='<regex>' packages/core/dist/<file>.test.js`.
 - After editing `.ts`, you must rebuild before re-running a single test, or the new code is invisible.
 
-`packages/cli` has no test script — it is a thin delegator to core.
+`packages/cli`はcoreへ委譲し、CLI試験を持つ。導入の結合試験は3 packageのbuild後に`node --test scripts/setup-integration.test.mjs`で実行する。
+
+製品全体の導入と更新後の登録は`codex-sidecar setup`、変更しない診断は`codex-sidecar setup --check`を使う。
+AI別の共有設定保持とOS対応はcoreが所有する。手順は`docs/USAGE.md`、生成する対応表は`docs/PLATFORM_SUPPORT.md`を参照する。
 
 Smoke a read-only App Server turn against this repo (after `corepack pnpm build`):
 

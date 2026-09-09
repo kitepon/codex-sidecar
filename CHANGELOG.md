@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## [0.3.13] — 2026-09-10
+
+### 追加・修正
+- 製品所有の`codex-sidecar setup`で、前提確認、Claude / Codex / Grok / Cursorの
+  stdio登録、読戻し、実MCPツール呼出しを一回で完了する。初回・再実行・更新を共通化し、
+  既存のenv・timeout・無効化指定・他の登録・authを維持する。
+- `setup --check`は設定を書かず実効状態を確認する。project指定時だけ既存設定の
+  dry-runを加える。失敗は非0終了と部分結果で返す。
+- Windows npm shim解決をcoreへ移し、OS別能力と未対応理由を集約する。
+  MCP・設定診断・同期dry-runを維持し、POSIX依存機能は明示的に拒否する。
+- projectもauthも不要な`codex_sidecar_status`をstdio / HTTP MCPへ追加する。
+- releaseの同梱検査をnpm 12のJSON出力形式に対応させ、従来の配列形式も維持する。
+- 3 packageを維持して同じ版に更新する。未公開だった0.3.12の修正も含む。
+
 ## [0.3.12] — 2026-08-30
 
 ### Fixed

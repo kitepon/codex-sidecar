@@ -1,6 +1,6 @@
 {
   "name": "codex-sidecar-core",
-  "version": "0.3.12",
+  "version": "0.3.13",
   "private": false,
   "license": "MIT",
   "author": {
@@ -32,7 +32,9 @@
     "prepublishOnly": "node ../../scripts/verify-release-commit.mjs"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "minimatch": "^10.0.1",
+    "smol-toml": "^1.8.0",
     "yaml": "^2.7.1"
   },
   "devDependencies": {

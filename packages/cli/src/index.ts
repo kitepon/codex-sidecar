@@ -283,7 +283,15 @@ try {
 }
 }
 
-if (!(process.argv.length === 3 && process.argv[2] === "--version")) await main();
+if (process.argv[2] === "setup") {
+  try {
+    const { runSetupCli } = await import("./setup.js");
+    const result = await runSetupCli(process.argv.slice(3), readCliVersion());
+    await writeJsonAndSetExit(result, result.status === "ok" ? 0 : 1);
+  } catch (error) {
+    await writeJsonAndSetExit({ status: "failed", error: { code: "SETUP_INVALID_INPUT", message: error instanceof Error ? error.message : String(error) } }, 1);
+  }
+} else if (!(process.argv.length === 3 && process.argv[2] === "--version")) await main();
 
 function parseArgs(args: string[]): CliOptions {
   const options: CliOptions = {
@@ -535,6 +543,7 @@ function parseAuthRecoveryStrategy(value: string): WorkAuthRecoveryStrategyType 
 }
 
 function printUsage(): void {
+  console.error("導入・更新後の登録: codex-sidecar setup [--ai all|claude,codex,grok,cursor] [--check] [--project <dir>] [--config <file>]");
   console.error(`Usage: codex-sidecar <${WORKFLOWS.join("|")}|diagnostics|factory-diagnostics|factory-errors|auth-status|auth-recover|work-start|work-result|work-cancel|work-recover|work-auth-recover> [options] [prompt]`);
   console.error("Options: --project <dir> | --project-root <dir> --config <file> --preset <name> --output-contract <text> --output-contract-file <file> --model <model> --model-reasoning-effort <effort> --context-file <json> --dry-run --json --turn-timeout-ms <ms> --no-interrupt-on-timeout --remove-worktree");
   console.error("Async work: work-start --idempotency-key <key> [--base-ref <ref>]; work-result|work-cancel|work-recover|work-auth-recover --idempotency-key <key>");

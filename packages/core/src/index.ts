@@ -55,3 +55,8 @@ export { inspectWorkAuthRecovery, recoverWorkAuthSession } from "./work-auth-rec
 export type { WorkAuthLeaseOwnership, WorkAuthRecoveryAck, WorkAuthRecoveryInspection } from "./work-auth-recovery.js";
 export { inspectWorkRecovery, recoverWorkRun } from "./work-recovery.js";
 export type { WorkRecoveryInspection, WorkRecoveryOutcome } from "./work-recovery.js";
+export { setupSidecar, type SetupOptions, type SetupResult } from "./setup.js";
+export { SETUP_CLIENTS, type SetupClient } from "./setup-clients.js";
+export { sidecarProductStatus } from "./product-status.js";
+export { platformCapabilities, platformLimitation } from "./platform.js";
+export { resolveMcpCommand, resolveMcpCommandInHelper, parseHelperOutput, type WindowsCommand } from "./windows-command-resolver.js";

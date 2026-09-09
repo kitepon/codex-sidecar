@@ -12,8 +12,8 @@
 - [x] setup、診断、OS能力判定の実装とfocused試験。
 - [x] 別ベンダーの境界反証と全ドキュメント点検。
 - [x] 製品release gate、main統合、commit/push、3 package公開。
-- [ ] Aiterm SSHセッションで公開npm版の公式導入、setup、実機smoke。
-- [ ] 実測・未実施・工場から削除できる処理を報告。
+- [x] 公開npm版の公式導入、setup、実機smoke。Macはオーナー指示によりローカルAiterm、他端末はSSH。
+- [x] 実測・未実施・工場から削除できる処理を記録。
 
 ## 裁定と検証
 
@@ -50,4 +50,11 @@ Windows native・Linux server・Linux workstationは、Aiterm SSHの同一セッ
 製品専用prefixへ公開npm版を導入し、4 AIの初回setup・再実行・check・MCP応答・診断が成功。
 MacのSSH導入と、通常のglobal prefix更新・共有AI設定への切替は未完了。
 他製品の共有AI設定更新と重複しない条件の回答を待っている。
-詳細は[公開版検証](evidence/2026-09-10-standalone-setup-publication.md)を参照する。
+詳細は[公開版検証](../evidence/2026-09-10-standalone-setup-publication.md)を参照する。
+
+## 完了
+
+2026-09-10、Macのローカル導入をオーナーが明示。Mac・Linux server・Linux workstation・
+Windows nativeで通常globalの3 packageを0.3.13へ更新し、共有4 AI設定のsetup・checkが
+すべて成功した。Macの公開版新規導入試験も成功。公開タグv0.3.13とGitHub Releaseを作成済み。
+上記現在地の未完了条件は解消し、本計画をarchiveへ移した。

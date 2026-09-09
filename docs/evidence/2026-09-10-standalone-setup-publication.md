@@ -41,3 +41,23 @@ WindowsへSSH再接続し、PowerShell 7のpromptを確認してから公開版�
 読戻し、実MCP接続確認を`codex-sidecar setup`で代替できる。
 運用端末の工場設定代行を撤去するのは、その端末の共有設定への切替完了後とする。
 工場の監視、CI runner、認証ログイン、project設定は移管対象に含めない。
+
+## 通常の導入先への更新完了
+
+同日、オーナーがMacはこの端末であるためSSH不要と明示した。
+MacはローカルAiterm、他の3端末はSSH接続を確認した同じAitermセッションで実施した。
+通常のglobal prefixへ3 packageの0.3.13を公式npmで導入し、存在する4 AI設定を
+製品領域のtarへ保存してから、製品のsetupとsetup --checkを端末ごとに順次実行した。
+
+| 端末 | 通常globalの3 package更新 | setupの登録 | checkの実MCP確認 |
+| --- | --- | --- | --- |
+| Mac | 成功 | 4 AI更新 | 4/4 verified |
+| Linux server | 成功 | 4 AI更新 | 4/4 verified |
+| Linux workstation | 成功 | 3 AI更新、Grok新規作成 | 4/4 verified |
+| Windows native / PowerShell 7 | 成功 | 4 AI更新 | 4/4 verified |
+
+Macの公開版新規導入・隔離設定での初回/再実行/check/診断/dry-runも成功した。
+Linux workstationはGrok設定が存在せず最初のtarが非0終了したため、setupを開始せず、
+存在する設定だけでtarを作り直してから続行した。
+これにより、前節のMac導入・通常global更新・共有AI設定切替の未完了条件は解消した。
+実モデルturnと起動中のAI本体の再読込は今回の実測に含めない。

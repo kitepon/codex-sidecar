@@ -18,7 +18,6 @@ manifests; this map does not duplicate their mutable value.
 - [../AGENTS.md](../AGENTS.md): product-owned engineering and documentation rules.
 - [USAGE.md](USAGE.md): CLI/MCP usage, durable async recovery controls, GPT-5.6 settings, release procedure, and structured result examples.
 - [PLATFORM_SUPPORT.md](PLATFORM_SUPPORT.md): 製品の能力定義から生成するOS別対応表。
-- [plan_standalone-setup.md](plan_standalone-setup.md): 導入・登録の製品所有化の作業計画（完了時にarchiveへ移動）。
 - [ARCHITECTURE.md](ARCHITECTURE.md): package boundaries, layering, safety model, isolated configuration, and result contract.
 - [PROTOCOL.md](PROTOCOL.md): Codex App Server protocol boundary, schema-partial behavior, and stable sidecar contracts.
 - [TODO.md](TODO.md): reproduced, unresolved product defects only.

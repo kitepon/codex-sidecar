@@ -4,7 +4,7 @@
 この記録は公開前の検証であり、公開npm版の実機導入成功を示すものではない。
 最終実装commitは`c2dcd2ce6dd53ce140e8272976b3c1c249a9be63`。
 [CI 34375601938](https://github.com/kitepon/codex-sidecar/actions/runs/34375601938)でMac・Linux server・Linux workstation・Windowsの4環境すべて成功した。
-設計の採否は[ADR 0020](../adr/0020-product-owned-setup.md)、残工程は[作業計画](../plan_standalone-setup.md)を参照する。
+設計の採否は[ADR 0020](../adr/0020-product-owned-setup.md)、工程履歴は[作業計画](../archive/plan_standalone-setup.md)を参照する。
 
 ## 確認結果
 

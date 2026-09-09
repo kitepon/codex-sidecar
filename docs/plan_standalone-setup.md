@@ -40,7 +40,8 @@ repo runner APIは0件を返すが実jobはOrganization runnerで実行されて
 Windows runnerのPATHにはpwsh.exeがありpowershell.exeはENOENTになる。製品のACL呼出しが
 5.1を指定していたため、7へ変更。同じPATHで保存最小試験とruntime error store関連試験が成功。
 別ベンダーの反証も完了。修正commit c304ba7のCIではWindowsの本体試験が成功。
-残る配布検査の`spawnSync npm ENOENT`をPowerShell 7起動で修正し、native focused試験後に再pushする。
+配布検査の`spawnSync npm ENOENT`もPowerShell 7起動へ修正し、native focused試験後にc2dcd2cをpushした。
+CI 34375601938は4環境すべて成功。release gateとmain統合・pushは完了、npm公開と公開版導入は未完了。
 MacのSSHはlocalhost・127.0.0.1・LANアドレスで接続不成立。
 Linux workstationは既存SSH設定から特定し、main-server経由の同じAiterm PTYでnative Linuxへ接続済み。
 公開用npm認証はMac/Windowsが401、Linux2台は未ログイン。Macで公式web loginを起動し本人操作を待っている。

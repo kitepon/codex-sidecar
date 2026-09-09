@@ -2,6 +2,8 @@
 
 実測日: 2026-09-10。対象manifest: core / CLI / MCPとも0.3.13。
 この記録は公開前の検証であり、公開npm版の実機導入成功を示すものではない。
+最終実装commitは`c2dcd2ce6dd53ce140e8272976b3c1c249a9be63`。
+[CI 34375601938](https://github.com/kitepon/codex-sidecar/actions/runs/34375601938)でMac・Linux server・Linux workstation・Windowsの4環境すべて成功した。
 設計の採否は[ADR 0020](../adr/0020-product-owned-setup.md)、残工程は[作業計画](../plan_standalone-setup.md)を参照する。
 
 ## 確認結果
@@ -52,8 +54,7 @@ Windows/Linuxのtarball導入・CLI実行は、Mac上のAiterm永続PTYからSSH
   Mac/Linux server/Linux workstationは成功。Windowsは保存処理のpowershell.exeがPATHに無く失敗した。
   SSHでrunnerのPATHを再現し、powershell.exeはENOENT、pwsh.exeはexit 0、保存focused試験は失敗を確認した。
   製品のACL呼出しをPowerShell 7へ変更したc304ba7のCIではWindowsのcore/CLI/MCP試験が成功した。
-  残った配布物検査は`spawnSync npm ENOENT`。Windowsのnpm shimを検査から呼ぶ箇所もPowerShell 7起動へ修正する。
-  公開前には修正commitの全環境CI成功が必要。
+  残った配布物検査の`spawnSync npm ENOENT`もPowerShell 7起動へ修正し、c2dcd2cの全環境CIが成功した。
 - MacのSSHはlocalhost / 127.0.0.1でConnection refused、LANアドレスでも接続不成立。
 - Linux workstationは既存SSH設定から特定し、main-server経由で同じAiterm PTYからSSHログインした。
   Mac鍵による直接接続はpublickey拒否。既存のmain-serverの鍵とknown_hostsを使用し、鍵の登録・変更はしていない。

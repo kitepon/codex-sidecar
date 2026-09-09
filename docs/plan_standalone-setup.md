@@ -11,7 +11,7 @@
 - [x] 登録の既存形とOS別機能の実測、境界設計。
 - [x] setup、診断、OS能力判定の実装とfocused試験。
 - [x] 別ベンダーの境界反証と全ドキュメント点検。
-- [ ] 製品release gate、main統合、commit/push、3 package公開。
+- [x] 製品release gate、main統合、commit/push、3 package公開。
 - [ ] Aiterm SSHセッションで公開npm版の公式導入、setup、実機smoke。
 - [ ] 実測・未実施・工場から削除できる処理を報告。
 
@@ -34,15 +34,20 @@ Windows SSHはPowerShell 7.6.5 / Node 24.19.0。公開0.3.11のauth-statusはRUN
 ## 現在地
 
 0.3.13の実装・3 package更新・local release gate・最低Node版のtarball導入を確認済み。
-実装commit e9e2f7dをmainへ統合・push済み。公開は未実施。
+実装commit e9e2f7dをmainへ統合・push済み。その後の修正を含め22b2a7cを公開対象に確定した。
 CI 34373924747はMac/Linux server/Linux workstationで成功し、Windowsのruntime error storeで失敗。
 repo runner APIは0件を返すが実jobはOrganization runnerで実行されており、不在の根拠にはできない。
 Windows runnerのPATHにはpwsh.exeがありpowershell.exeはENOENTになる。製品のACL呼出しが
 5.1を指定していたため、7へ変更。同じPATHで保存最小試験とruntime error store関連試験が成功。
 別ベンダーの反証も完了。修正commit c304ba7のCIではWindowsの本体試験が成功。
 配布検査の`spawnSync npm ENOENT`もPowerShell 7起動へ修正し、native focused試験後にc2dcd2cをpushした。
-CI 34375601938は4環境すべて成功。release gateとmain統合・pushは完了、npm公開と公開版導入は未完了。
+CI 34375601938は4環境すべて成功。文書commit 22b2a7cのCI 34376253179も成功。
+release gate・main統合・push・3 packageの0.3.13公開は完了。
 MacのSSHはlocalhost・127.0.0.1・LANアドレスで接続不成立。
 Linux workstationは既存SSH設定から特定し、main-server経由の同じAiterm PTYでnative Linuxへ接続済み。
-公開用npm認証はMac/Windowsが401、Linux2台は未ログイン。Macで公式web loginを起動し本人操作を待っている。
-公開前のtarball試験を、公開npm版の実機導入の代わりには数えない。
+Macの公式npm web loginと各publishの本人認証が完了し、公開版をregistryから取得済み。
+Windows native・Linux server・Linux workstationは、Aiterm SSHの同一セッションで
+製品専用prefixへ公開npm版を導入し、4 AIの初回setup・再実行・check・MCP応答・診断が成功。
+MacのSSH導入と、通常のglobal prefix更新・共有AI設定への切替は未完了。
+他製品の共有AI設定更新と重複しない条件の回答を待っている。
+詳細は[公開版検証](evidence/2026-09-10-standalone-setup-publication.md)を参照する。

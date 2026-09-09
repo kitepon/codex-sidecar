@@ -12,6 +12,7 @@
 
 ## Verification evidence
 
+- [製品所有setupの公開版検証](../evidence/2026-09-10-standalone-setup-publication.md)
 - [製品所有setupの公開前検証](../evidence/2026-09-10-standalone-setup-prepublication.md)
 - [Node.js 22.13.0 minimum runtime](../evidence/2026-08-30-node-22.13-minimum.md)
 - [0.3.11 npm artifact provenance](../evidence/2026-08-30-0.3.11-artifact-provenance.md)

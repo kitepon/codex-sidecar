@@ -190,9 +190,13 @@ test("repository内のMarkdownはローカルリンク切れを持たない", as
 });
 
 test("公開packageは自己完結したREADMEを同梱する", async () => {
+  // Windowsの公式npm shimはPowerShell 7に解決させる。
+  const [command, ...args] = process.platform === "win32"
+    ? ["pwsh.exe", "-NoProfile", "-NonInteractive", "-Command", "npm pack --dry-run --ignore-scripts --json"]
+    : ["npm", "pack", "--dry-run", "--ignore-scripts", "--json"];
   for (const packageDirectory of ["packages/core", "packages/cli", "packages/mcp"]) {
     // npm 11の配列とnpm 12のpackage名keyのobjectを、どちらも値の一覧として読む。
-    const [packed] = Object.values(JSON.parse(execFileSync("npm", ["pack", "--dry-run", "--ignore-scripts", "--json"], {
+    const [packed] = Object.values(JSON.parse(execFileSync(command, args, {
       cwd: path.join(projectDirectory, packageDirectory),
       encoding: "utf8",
     })));

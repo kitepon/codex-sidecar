@@ -39,6 +39,9 @@ CI 34373924747はMac/Linux server/Linux workstationで成功し、Windowsのrunt
 repo runner APIは0件を返すが実jobはOrganization runnerで実行されており、不在の根拠にはできない。
 Windows runnerのPATHにはpwsh.exeがありpowershell.exeはENOENTになる。製品のACL呼出しが
 5.1を指定していたため、7へ変更。同じPATHで保存最小試験とruntime error store関連試験が成功。
-別ベンダーの反証も完了。修正commitをpushして全環境CIを再確認する。
-MacのSSHはlocalhost・127.0.0.1・LANアドレスで接続不成立。Linux workstationの現行SSH先は未確認。
+別ベンダーの反証も完了。修正commit c304ba7のCIではWindowsの本体試験が成功。
+残る配布検査の`spawnSync npm ENOENT`をPowerShell 7起動で修正し、native focused試験後に再pushする。
+MacのSSHはlocalhost・127.0.0.1・LANアドレスで接続不成立。
+Linux workstationは既存SSH設定から特定し、main-server経由の同じAiterm PTYでnative Linuxへ接続済み。
+公開用npm認証はMac/Windowsが401、Linux2台は未ログイン。Macで公式web loginを起動し本人操作を待っている。
 公開前のtarball試験を、公開npm版の実機導入の代わりには数えない。

@@ -51,10 +51,14 @@ Windows/Linuxのtarball導入・CLI実行は、Mac上のAiterm永続PTYからSSH
   4環境とも実行された。repo一覧からrunner不在と推定した判断は撤回する。
   Mac/Linux server/Linux workstationは成功。Windowsは保存処理のpowershell.exeがPATHに無く失敗した。
   SSHでrunnerのPATHを再現し、powershell.exeはENOENT、pwsh.exeはexit 0、保存focused試験は失敗を確認した。
-  製品のACL呼出しをPowerShell 7へ変更して検証する。公開前には修正commitの全環境CI成功が必要。
+  製品のACL呼出しをPowerShell 7へ変更したc304ba7のCIではWindowsのcore/CLI/MCP試験が成功した。
+  残った配布物検査は`spawnSync npm ENOENT`。Windowsのnpm shimを検査から呼ぶ箇所もPowerShell 7起動へ修正する。
+  公開前には修正commitの全環境CI成功が必要。
 - MacのSSHはlocalhost / 127.0.0.1でConnection refused、LANアドレスでも接続不成立。
-- Linux workstationの現行SSH先は未確認。既存fox-wsl入口は2回timeout。
-  Windows nativeはSSH接続できた。WSLやDockerをWindows実機試験の代わりに使っていない。
+- Linux workstationは既存SSH設定から特定し、main-server経由で同じAiterm PTYからSSHログインした。
+  Mac鍵による直接接続はpublickey拒否。既存のmain-serverの鍵とknown_hostsを使用し、鍵の登録・変更はしていない。
+  Windows nativeもSSH接続できた。WSLやDockerをWindows実機試験の代わりに使っていない。
+- npm公開用認証はMac/Windowsが401、Linux2台は未ログイン。公式web loginで本人認証が必要。
 - AitermのMac PTYからSSHしたWindowsでmark付き送信がPOSIX printfを混入した。
   通常send/readは利用可能。必要な契約はSSH先shellに適合する完了検知。別repoは変更していない。
 

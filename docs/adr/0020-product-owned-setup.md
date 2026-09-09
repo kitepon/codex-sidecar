@@ -32,3 +32,11 @@ Grokの未展開envは失敗するfocused testを先行して原因を固定し�
 製品release gate、tarball/最低Node版、mainへの着地とCI成功を公開前に確認する。
 公開後はAitermのSSHセッションで公式npm導入・setup・実効smokeを行う。
 SSH接続不能や人の操作待ちを模擬試験で代替せず、未実施として区別する。
+
+## 公開前CIで見つかったWindows保存処理の差分
+
+Decision追記: ACL処理の起動を`powershell.exe`から`pwsh.exe`へ変更する。
+Windows runnerと同じPATHで、前者はENOENT、後者はexit 0となり、保存の最小試験は
+変更前に失敗・変更後に成功した。ACL本文・所有者限定判定・期限・環境除去は変更しない。
+Grok 4.6 highがこの一行の境界差分を読取り専用で反証し、実害なしと回答した
+（完了観測2026-09-09T16:07:18.496Z）。親も実測と差分から採用する。

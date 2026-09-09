@@ -14,6 +14,8 @@
   MCP・設定診断・同期dry-runを維持し、POSIX依存機能は明示的に拒否する。
 - projectもauthも不要な`codex_sidecar_status`をstdio / HTTP MCPへ追加する。
 - releaseの同梱検査をnpm 12のJSON出力形式に対応させ、従来の配列形式も維持する。
+- Windows runtime error storeのACL処理をPowerShell 7から起動する。
+  5.1をPATHに持たないnative runnerでも既存の所有者限定ACL契約を維持する。
 - 3 packageを維持して同じ版に更新する。未公開だった0.3.12の修正も含む。
 
 ## [0.3.12] — 2026-08-30

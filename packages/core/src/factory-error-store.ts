@@ -725,7 +725,7 @@ async function verifyWindowsAcl(path: string, directory: boolean): Promise<void>
 
 async function runWindowsAclScript(path: string, directory: boolean, apply: boolean): Promise<void> {
   const script = apply ? WINDOWS_ACL_APPLY_SCRIPT : WINDOWS_ACL_VERIFY_SCRIPT;
-  await runBoundedChild("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", script], false, {
+  await runBoundedChild("pwsh.exe", ["-NoProfile", "-NonInteractive", "-Command", script], false, {
     ...windowsPowerShellEnvironment(), FACTORY_ACL_PATH: path, FACTORY_ACL_DIRECTORY: directory ? "1" : "0",
   });
 }

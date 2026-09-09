@@ -16,9 +16,11 @@
 | release/repository gate | 11成功。npm 12のpack出力形式への対応後に再確認 |
 | setup focused試験 | 11成功。初回・更新・旧登録・所有外保持・無効化・失敗・部分結果・env・local優先・project衝突 |
 | Windows nativeのfocused試験 | setup 11成功、Windows resolver 16成功。PowerShell 7.6.5 / Node 24.19.0、Aiterm SSHで実施 |
+| WindowsのACL保存経路 | PowerShell 7へ修正後、runnerと同じPATHで保存最小試験とruntime error store関連試験が成功 |
 | Linux serverのfocused試験 | setup 11成功、Windows resolver 16成功。Aiterm SSHで実施 |
 | 3 packageのtarball | 想定外ファイルなし、CLI/MCPのcore依存は0.3.13でworkspace指定なし |
 | 最低Node 22.13.0 | 隔離prefixへ3 tarballをnpm導入し、CLI版・4 AI初回setup・check・runtime error store診断が成功 |
+| Docker HTTP | e9e2f7dからLinux serverでimageをbuild。localhostの一時portでinitializeが0.3.13を返した。containerは削除済み |
 | 全文書点検 | 現役の導入案内・構成・protocol・3 package README・日英overviewを更新。ADR/evidence/archiveは履歴として維持。Markdownリンク閉包とOS表の生成照合が成功 |
 
 実端末のHOMEをcwdにした試験で、fixtureが所有外project登録を読んでSETUP_SCOPE_CONFLICTになった。
@@ -45,8 +47,11 @@ Windows/Linuxのtarball導入・CLI実行は、Mac上のAiterm永続PTYからSSH
 
 ## 外部の未充足条件
 
-- GitHub APIのrepo runner一覧は0件。直近5件のCIはcancelled。
-  公開前には`self-hosted` / `factory` / 各環境ラベルのrunnerで今回のcommitのCI成功が必要。
+- GitHub APIのrepo runner一覧は0件を返したが、CI 34373924747の実jobはOrganization runnerで
+  4環境とも実行された。repo一覧からrunner不在と推定した判断は撤回する。
+  Mac/Linux server/Linux workstationは成功。Windowsは保存処理のpowershell.exeがPATHに無く失敗した。
+  SSHでrunnerのPATHを再現し、powershell.exeはENOENT、pwsh.exeはexit 0、保存focused試験は失敗を確認した。
+  製品のACL呼出しをPowerShell 7へ変更して検証する。公開前には修正commitの全環境CI成功が必要。
 - MacのSSHはlocalhost / 127.0.0.1でConnection refused、LANアドレスでも接続不成立。
 - Linux workstationの現行SSH先は未確認。既存fox-wsl入口は2回timeout。
   Windows nativeはSSH接続できた。WSLやDockerをWindows実機試験の代わりに使っていない。

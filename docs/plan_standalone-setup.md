@@ -34,8 +34,11 @@ Windows SSHはPowerShell 7.6.5 / Node 24.19.0。公開0.3.11のauth-statusはRUN
 ## 現在地
 
 0.3.13の実装・3 package更新・local release gate・最低Node版のtarball導入を確認済み。
-公開は未実施。GitHub APIでこのrepoのself-hosted runnerは0件、直近5件のCIはcancelled。
-mainへの統合・push後に今回のCIの実状態を確認する。必要な外部契約は、製品workflowの
-`factory`と各環境ラベルを持つrunnerがこのrepoのjobを実行できること。
+実装commit e9e2f7dをmainへ統合・push済み。公開は未実施。
+CI 34373924747はMac/Linux server/Linux workstationで成功し、Windowsのruntime error storeで失敗。
+repo runner APIは0件を返すが実jobはOrganization runnerで実行されており、不在の根拠にはできない。
+Windows runnerのPATHにはpwsh.exeがありpowershell.exeはENOENTになる。製品のACL呼出しが
+5.1を指定していたため、7へ変更。同じPATHで保存最小試験とruntime error store関連試験が成功。
+別ベンダーの反証も完了。修正commitをpushして全環境CIを再確認する。
 MacのSSHはlocalhost・127.0.0.1・LANアドレスで接続不成立。Linux workstationの現行SSH先は未確認。
 公開前のtarball試験を、公開npm版の実機導入の代わりには数えない。

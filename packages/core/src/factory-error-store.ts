@@ -7,7 +7,7 @@ import { dirname, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { Worker } from "node:worker_threads";
 
-const SCHEMA_VERSION = "2" as const;
+const SCHEMA_VERSION = "3" as const;
 const DIR_MODE = 0o700;
 const FILE_MODE = 0o600;
 const DEFAULT_RETENTION_MS = 30 * 24 * 60 * 60 * 1_000;
@@ -156,6 +156,7 @@ export async function captureSidecarRuntimeErrorOwned(
       const existing = store.records.find((record) => record.fingerprint === fingerprint);
       const sequence = store.next_sequence++;
       if (existing) {
+        existing.product_version = productVersion;
         existing.occurrence_count += 1;
         existing.last_seen = now;
         existing.status = "open";
@@ -351,6 +352,21 @@ function emptyStore(): FactoryErrorStore {
 }
 
 function migrateLegacyStore(value: unknown): FactoryErrorStore {
+  if (isRecord(value) && value.schema_version === "2") {
+    if (!Array.isArray(value.records)) throw new Error("旧形式のエラー記録が不正です");
+    const migrated = { ...value, schema_version: SCHEMA_VERSION, records: value.records.map((record) => {
+      if (!isRecord(record) || record.state_schema_version !== "2" || typeof record.product_version !== "string") {
+        throw new Error("旧形式のエラー項目が不正です");
+      }
+      assertProductVersion(record.product_version);
+      return { ...record, state_schema_version: SCHEMA_VERSION };
+    }) } as FactoryErrorStore;
+    validateStore(migrated);
+    for (const record of migrated.records) {
+      if (record.occurrence_count > 1) record.product_version = "unknown";
+    }
+    return migrated;
+  }
   if (!isRecord(value) || value.schema_version !== "1") return value as FactoryErrorStore;
   if (!exactKeys(value, ["schema_version", "product", "next_sequence", "acknowledged_through", "records", "observations"])
     || value.product !== "codex-sidecar" || !Number.isSafeInteger(value.next_sequence)
@@ -366,9 +382,12 @@ function migrateLegacyStore(value: unknown): FactoryErrorStore {
     if (!isRecord(record) || !exactKeys(record, legacyKeys) || record.state_schema_version !== "1") {
       throw new Error("invalid legacy factory error record");
     }
+    if (typeof record.product_version !== "string") throw new Error("旧形式のエラー項目が不正です");
+    assertProductVersion(record.product_version);
     const wasResolved = record.status === "resolved";
     return {
       ...record,
+      product_version: Number(record.occurrence_count) > 1 ? "unknown" : record.product_version,
       state_schema_version: SCHEMA_VERSION,
       status: wasResolved ? "open" : record.status,
       resolved_at: null,
@@ -410,7 +429,7 @@ function validateStore(value: FactoryErrorStore): void {
     if (record.component !== definition[0] || record.message_template !== definition[1] ||
         record.severity !== definition[2] || record.fingerprint !== expectedFingerprint ||
         record.state_schema_version !== SCHEMA_VERSION ||
-        typeof record.product_version !== "string" || record.product_version.length > MAX_PRODUCT_VERSION_LENGTH || !/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(record.product_version) ||
+        typeof record.product_version !== "string" || record.product_version.length > MAX_PRODUCT_VERSION_LENGTH || (record.product_version !== "unknown" && !/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(record.product_version)) ||
         typeof record.os !== "string" || !/^[a-z0-9_-]{1,32}$/.test(record.os) ||
         typeof record.arch !== "string" || !/^[A-Za-z0-9_-]{1,32}$/.test(record.arch) ||
         !isCanonicalUtc(record.first_seen) || !isCanonicalUtc(record.last_seen) ||

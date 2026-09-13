@@ -909,6 +909,8 @@ Practical integration pattern:
 
 ## Release Procedure
 
+runtime error storeと`factory-errors` snapshotはschema 3を使う。recordの`product_version`は最終実発生時の版で、snapshot取得時には更新しない。旧schema 1・2の単発記録は版を保持し、複数回の旧集約は`unknown`にする。読取りは状態JSONを書き換えず、次のロック内更新で移行を保存する。consumerを先に更新し、旧writerを終了してから新writerを導入する。schema 3を保存した後の旧版への切替には、製品バックアップの復元が必要である。
+
 Use this end-to-end procedure for an already version-aligned release. Run the
 steps in one shell so `RELEASE_VERSION`, `pnpm_release`, and
 `PACK_DIR` remain bound to the artifacts being published.

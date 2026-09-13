@@ -54,7 +54,7 @@ test("factory-errors exposes a bounded snapshot/ack contract and fixed failures"
   assert.equal(snapshot.code, 0, snapshot.stdout);
   assert.deepEqual(JSON.parse(snapshot.stdout), {
     status: "ok",
-    factoryRuntimeErrors: { schema_version: "2", cursor: 0, acknowledged_through: 0, records: [] },
+    factoryRuntimeErrors: { schema_version: "3", cursor: 0, acknowledged_through: 0, records: [] },
   });
   const ack = await runCli(root.home, root.cache, ["factory-errors", "--action", "ack", "--cursor", "0"], env);
   assert.equal(ack.code, 0, ack.stdout);
@@ -188,7 +188,7 @@ test("factory-diagnostics flushes complete ready JSON through a pipe without exp
     },
     modelPolicy: { status: "ready", source: "explicit", modelConfigured: true, modelReasoningEffortConfigured: false },
     readOnlyDryRun: { status: "ready", workflow: "review" },
-    runtimeErrorStore: { status: "not_applicable", schemaVersion: "2", collection: "disabled", store: "absent", pending: 0 },
+    runtimeErrorStore: { status: "not_applicable", schemaVersion: "3", collection: "disabled", store: "absent", pending: 0 },
   });
   assert.equal("normalizedRequest" in payload, false);
   assert.doesNotMatch(result.stdout, new RegExp(root.root.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));

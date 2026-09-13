@@ -30,6 +30,38 @@ async function fixture(enabled: boolean | "malformed" = true, profile = "mac") {
   return { root, configPath, storePath, productVersion: "1.2.3" };
 }
 
+test("旧v2集約は初回だけ版を保持し、複数回の発生版を推測しない", async () => {
+  for (const count of [1, 2]) {
+    const options = await fixture();
+    await captureSidecarRuntimeError("PROTOCOL_ERROR", options);
+    const legacy = JSON.parse(await readFile(options.storePath, "utf8"));
+    legacy.schema_version = "2";
+    legacy.records[0].state_schema_version = "2";
+    legacy.records[0].occurrence_count = count;
+    await writeFile(options.storePath, JSON.stringify(legacy));
+    const snapshot = await readSidecarRuntimeErrors(options);
+    assert.equal(snapshot.schema_version, "3");
+    assert.equal(snapshot.records[0].product_version, count === 1 ? "1.2.3" : "unknown");
+    assert.equal(JSON.parse(await readFile(options.storePath, "utf8")).schema_version, "2");
+    await captureSidecarRuntimeError("PROTOCOL_ERROR", { ...options, productVersion: "2.0.0" });
+    const current = await readSidecarRuntimeErrors(options);
+    assert.equal(current.records[0].product_version, "2.0.0");
+    assert.equal(current.records[0].occurrence_count, count + 1);
+    assert.equal(JSON.parse(await readFile(options.storePath, "utf8")).schema_version, "3");
+  }
+});
+
+test("別の版での再発は発生版を更新し、読取りでは更新しない", async () => {
+  const options = await fixture();
+  await captureSidecarRuntimeError("PROTOCOL_ERROR", options);
+  const current = { ...options, productVersion: "2.0.0" };
+  assert.equal((await readSidecarRuntimeErrors(current)).records[0].product_version, "1.2.3");
+  await captureSidecarRuntimeError("PROTOCOL_ERROR", current);
+  const entry = (await readSidecarRuntimeErrors(current)).records[0];
+  assert.equal(entry.product_version, "2.0.0");
+  assert.equal(entry.occurrence_count, 2);
+});
+
 test("native Linux workstation profile enables the opt-in runtime error store", async () => {
   const options = await fixture(true, "linux");
   assert.equal((await captureSidecarRuntimeError("PROTOCOL_ERROR", options)).status, "recorded");
@@ -113,7 +145,7 @@ test("legacy v1 records migrate strictly without inventing a resolution timestam
   await writeFile(options.storePath, `${JSON.stringify(legacy)}\n`, { mode: 0o600 });
 
   const migrated = await readSidecarRuntimeErrors(options);
-  assert.equal(migrated.schema_version, "2");
+  assert.equal(migrated.schema_version, "3");
   assert.equal(migrated.records[0].status, "open");
   assert.equal(migrated.records[0].resolved_at, null);
   assert.equal(migrated.records[0].reason_code, null);
@@ -122,7 +154,7 @@ test("legacy v1 records migrate strictly without inventing a resolution timestam
 
   await acknowledgeSidecarRuntimeErrors(migrated.cursor, options);
   const persisted = JSON.parse(await readFile(options.storePath, "utf8"));
-  assert.equal(persisted.schema_version, "2");
+  assert.equal(persisted.schema_version, "3");
 });
 
 test("private modes, atomic replacement, and bounded diagnostics", { skip: process.platform === "win32" }, async () => {
@@ -132,7 +164,7 @@ test("private modes, atomic replacement, and bounded diagnostics", { skip: proce
   assert.equal((await stat(options.storePath)).mode & 0o777, 0o600);
   assert.deepEqual((await readdir(join(options.root, "state"))).sort(), ["errors.json", "errors.json.lock.sqlite"]);
   assert.deepEqual(await inspectSidecarRuntimeErrorStore(options), {
-    schemaVersion: "2",
+    schemaVersion: "3",
     collection: "enabled",
     store: "ready",
     pending: 1,
@@ -143,7 +175,7 @@ test("Windows owner-only ACL store remains readable within the bounded capture d
   const options = await fixture();
   assert.equal((await captureSidecarRuntimeError("APP_SERVER_TIMEOUT", options)).status, "recorded");
   assert.deepEqual(await inspectSidecarRuntimeErrorStore(options), {
-    schemaVersion: "2",
+    schemaVersion: "3",
     collection: "enabled",
     store: "ready",
     pending: 1,

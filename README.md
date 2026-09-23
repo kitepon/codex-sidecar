@@ -4,7 +4,7 @@
 
 # codex-sidecar
 
-> **Retired (2026-09-24).** This repository is preserved for historical reference. The CLI, MCP server, and library packages are no longer maintained. Use each product's current native integration instead of installing codex-sidecar.
+> **Retirement in progress (2026-09-24).** New integrations are closed. Caveat, Throughline, and Spotter have removed their runtime dependencies; Kikoeru still uses `codex_generate` for its content pipeline. Keep that existing service running until its owner migrates the generation path. Do not install codex-sidecar for new projects.
 
 [![npm version](https://img.shields.io/npm/v/codex-sidecar-cli.svg?color=cb3837&logo=npm&label=codex-sidecar-cli)](https://www.npmjs.com/package/codex-sidecar-cli)
 [![npm version](https://img.shields.io/npm/v/codex-sidecar-mcp.svg?color=cb3837&logo=npm&label=codex-sidecar-mcp)](https://www.npmjs.com/package/codex-sidecar-mcp)

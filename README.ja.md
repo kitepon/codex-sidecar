@@ -4,7 +4,7 @@
 
 # codex-sidecar
 
-> **退役済み（2026-09-24）。** このリポジトリは履歴参照のために残しています。CLI、MCP、ライブラリの各パッケージは保守しません。codex-sidecarを新規導入せず、利用する製品の現行の標準連携を使ってください。
+> **退役作業中（2026-09-24）。** 新規連携は停止しています。Caveat・Throughline・Spotterの実行時依存は撤去しましたが、Kikoeruの教材生成はまだ`codex_generate`を利用しています。生成経路を移すまで既存サービスを維持し、codex-sidecarを新規導入しないでください。
 
 [![npm version](https://img.shields.io/npm/v/codex-sidecar-cli.svg?color=cb3837&logo=npm&label=codex-sidecar-cli)](https://www.npmjs.com/package/codex-sidecar-cli)
 [![npm version](https://img.shields.io/npm/v/codex-sidecar-mcp.svg?color=cb3837&logo=npm&label=codex-sidecar-mcp)](https://www.npmjs.com/package/codex-sidecar-mcp)

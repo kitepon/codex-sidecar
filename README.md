@@ -4,6 +4,8 @@
 
 # codex-sidecar
 
+> **Retired (2026-09-24).** This repository is preserved for historical reference. The CLI, MCP server, and library packages are no longer maintained. Use each product's current native integration instead of installing codex-sidecar.
+
 [![npm version](https://img.shields.io/npm/v/codex-sidecar-cli.svg?color=cb3837&logo=npm&label=codex-sidecar-cli)](https://www.npmjs.com/package/codex-sidecar-cli)
 [![npm version](https://img.shields.io/npm/v/codex-sidecar-mcp.svg?color=cb3837&logo=npm&label=codex-sidecar-mcp)](https://www.npmjs.com/package/codex-sidecar-mcp)
 [![CI](https://github.com/kitepon/codex-sidecar/actions/workflows/ci.yml/badge.svg)](https://github.com/kitepon/codex-sidecar/actions/workflows/ci.yml)

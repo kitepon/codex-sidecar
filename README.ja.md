@@ -4,6 +4,8 @@
 
 # codex-sidecar
 
+> **退役済み（2026-09-24）。** このリポジトリは履歴参照のために残しています。CLI、MCP、ライブラリの各パッケージは保守しません。codex-sidecarを新規導入せず、利用する製品の現行の標準連携を使ってください。
+
 [![npm version](https://img.shields.io/npm/v/codex-sidecar-cli.svg?color=cb3837&logo=npm&label=codex-sidecar-cli)](https://www.npmjs.com/package/codex-sidecar-cli)
 [![npm version](https://img.shields.io/npm/v/codex-sidecar-mcp.svg?color=cb3837&logo=npm&label=codex-sidecar-mcp)](https://www.npmjs.com/package/codex-sidecar-mcp)
 [![CI](https://github.com/kitepon/codex-sidecar/actions/workflows/ci.yml/badge.svg)](https://github.com/kitepon/codex-sidecar/actions/workflows/ci.yml)
